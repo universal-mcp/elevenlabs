@@ -1,62 +1,44 @@
 from typing import Any
-
 from universal_mcp.applications import APIApplication
 from universal_mcp.integrations import Integration
 
-
 class ElevenlabsApp(APIApplication):
     def __init__(self, integration: Integration = None, **kwargs) -> None:
-        super().__init__(name='elevenlabs', integration=integration, **kwargs)
+        super().__init__(name='elevenlabsapp', integration=integration, **kwargs)
         self.base_url = "https://api.elevenlabs.io"
 
-    def _get_headers(self) -> dict[str, Any]:
-        api_key = self.integration.get_credentials().get("api_key")
-        return {
-            "xi-api-key": f"{api_key}",
-            "Content-Type": "application/json",
-            "Accept": "application/json",
-        }
-
-    def get_generated_items_v1_history_get(self, page_size=None, start_after_history_item_id=None, voice_id=None) -> dict[str, Any]:
+    def get_generated_items(self, page_size=None, voice_id=None) -> dict[str, Any]:
         """
-        Retrieves a paginated history of generated items from the API, optionally filtered by page size, starting history item, or voice ID.
-        
+        Retrieves historical data based on specified parameters, including page size and voice ID, using the "GET" method at the "/v1/history" endpoint.
+
         Args:
-            page_size: Optional; int. The maximum number of history items to return in one response.
-            start_after_history_item_id: Optional; str. The ID of the history item after which to start retrieving results, used for pagination.
-            voice_id: Optional; str. If specified, filters the history items to those generated using the given voice ID.
-        
+            page_size (string): How many history items to return at maximum. Can not exceed 1000, defaults to 100. Example: '1'.
+            voice_id (string): Voice ID to be filtered for, you can use GET to receive a list of voices and their IDs. Example: 'pMsXgVXv3BLzUgSXRplE'.
+
         Returns:
-            dict[str, Any]: A dictionary representing the parsed JSON response containing the list of generated history items and associated metadata.
-        
-        Raises:
-            requests.HTTPError: If the HTTP request to the API fails or an error status code is returned.
-        
+            dict[str, Any]: Success / Success
+
         Tags:
-            get, history, list, api
+            History
         """
         url = f"{self.base_url}/v1/history"
-        query_params = {k: v for k, v in [('page_size', page_size), ('start_after_history_item_id', start_after_history_item_id), ('voice_id', voice_id)] if v is not None}
+        query_params = {k: v for k, v in [('page_size', page_size), ('voice_id', voice_id)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
         return response.json()
 
-    def get_history_item_by_id_v1_history__history_item_id__get(self, history_item_id) -> dict[str, Any]:
+    def get_history_item_by_id(self, history_item_id) -> dict[str, Any]:
         """
-        Retrieves a specific history item by its unique identifier.
-        
+        Retrieves a specific history item by its identifier using the API defined at "/v1/history/{history_item_id}" with the GET method.
+
         Args:
-            history_item_id: str. The unique identifier of the history item to retrieve.
-        
+            history_item_id (string): history_item_id
+
         Returns:
-            dict. A dictionary containing the details of the requested history item.
-        
-        Raises:
-            ValueError: Raised if 'history_item_id' is None.
-            HTTPError: Raised if the HTTP request to retrieve the history item fails.
-        
+            dict[str, Any]: Success / Success
+
         Tags:
-            get, history, item, fetch, api
+            History
         """
         if history_item_id is None:
             raise ValueError("Missing required parameter 'history_item_id'")
@@ -66,22 +48,18 @@ class ElevenlabsApp(APIApplication):
         response.raise_for_status()
         return response.json()
 
-    def delete_history_item_v1_history__history_item_id__delete(self, history_item_id) -> Any:
+    def delete_history_item(self, history_item_id) -> dict[str, Any]:
         """
-        Deletes a specific history item by its unique identifier.
-        
+        Deletes a specific history item identified by its ID using the DELETE method.
+
         Args:
-            history_item_id: str. The unique identifier of the history item to delete.
-        
+            history_item_id (string): history_item_id
+
         Returns:
-            dict. The JSON response from the API after deleting the history item.
-        
-        Raises:
-            ValueError: If 'history_item_id' is None.
-            requests.HTTPError: If the HTTP request to delete the history item fails.
-        
+            dict[str, Any]: Success / Success
+
         Tags:
-            delete, history, management, v1
+            History
         """
         if history_item_id is None:
             raise ValueError("Missing required parameter 'history_item_id'")
@@ -91,22 +69,18 @@ class ElevenlabsApp(APIApplication):
         response.raise_for_status()
         return response.json()
 
-    def get_audio_from_history_item_v1_history__history_item_id__audio_get(self, history_item_id) -> Any:
+    def get_audio_from_history_item(self, history_item_id) -> Any:
         """
-        Retrieves the audio data associated with a specific history item by its unique identifier.
-        
+        Retrieves audio data for a specific history item identified by `{history_item_id}` using the `GET` method at the `/v1/history/{history_item_id}/audio` endpoint.
+
         Args:
-            history_item_id: str. The unique identifier of the history item whose audio data is to be retrieved.
-        
+            history_item_id (string): history_item_id
+
         Returns:
-            dict. The audio data for the specified history item, parsed from the JSON response.
-        
-        Raises:
-            ValueError: If the 'history_item_id' parameter is None.
-            requests.HTTPError: If the HTTP request to retrieve audio data fails (e.g., non-2xx status code).
-        
+            Any: Success
+
         Tags:
-            get, audio, history
+            History
         """
         if history_item_id is None:
             raise ValueError("Missing required parameter 'history_item_id'")
@@ -116,29 +90,30 @@ class ElevenlabsApp(APIApplication):
         response.raise_for_status()
         return response.json()
 
-    def download_history_items_v1_history_download_post(self, history_item_ids, output_format=None) -> Any:
+    def download_history_items(self, history_item_ids=None) -> Any:
         """
-        Downloads specified history items in the given output format via a POST request.
-        
+        Initiates a historical data download process and returns a success status upon completion.
+
         Args:
-            history_item_ids: List of identifiers for the history items to download. Must not be None.
-            output_format: Optional; specifies the desired output format for the downloaded data (e.g., 'json', 'csv'). If not provided, a default format is used.
-        
+            history_item_ids (array): history_item_ids
+                Example:
+                ```json
+                {
+                  "history_item_ids": [
+                    "history_item_ids",
+                    "history_item_ids"
+                  ]
+                }
+                ```
+
         Returns:
-            A JSON-decoded response containing the downloaded history items in the requested format.
-        
-        Raises:
-            ValueError: If 'history_item_ids' is None.
-            HTTPError: If the HTTP request to the API fails or returns an error response.
-        
+            Any: Success / Success
+
         Tags:
-            download, history, post, api
+            History
         """
-        if history_item_ids is None:
-            raise ValueError("Missing required parameter 'history_item_ids'")
         request_body = {
             'history_item_ids': history_item_ids,
-            'output_format': output_format,
         }
         request_body = {k: v for k, v in request_body.items() if v is not None}
         url = f"{self.base_url}/v1/history/download"
@@ -147,23 +122,19 @@ class ElevenlabsApp(APIApplication):
         response.raise_for_status()
         return response.json()
 
-    def delete_sample_v1_voices__voice_id__samples__sample_id__delete(self, voice_id, sample_id) -> Any:
+    def delete_sample(self, voice_id, sample_id) -> dict[str, Any]:
         """
-        Deletes a specific voice sample identified by voice_id and sample_id from the API.
-        
+        Deletes a specific voice sample identified by the `sample_id` from a voice with the given `voice_id` using the DELETE method.
+
         Args:
-            voice_id: str. The unique identifier for the voice whose sample is to be deleted.
-            sample_id: str. The unique identifier for the sample to be deleted.
-        
+            voice_id (string): voice_id
+            sample_id (string): sample_id
+
         Returns:
-            dict. The JSON response from the API after successful deletion of the sample.
-        
-        Raises:
-            ValueError: Raised if either 'voice_id' or 'sample_id' is None.
-            requests.HTTPError: Raised if the API response contains an HTTP error status.
-        
+            dict[str, Any]: Success / Success
+
         Tags:
-            delete, voice, sample, api
+            Samples
         """
         if voice_id is None:
             raise ValueError("Missing required parameter 'voice_id'")
@@ -175,23 +146,19 @@ class ElevenlabsApp(APIApplication):
         response.raise_for_status()
         return response.json()
 
-    def get_audio_from_sample_v1_voices__voice_id__samples__sample_id__audio_get(self, voice_id, sample_id) -> Any:
+    def get_audio_from_sample(self, voice_id, sample_id) -> Any:
         """
-        Retrieves audio data for a specific sample from a given voice using provided identifiers.
-        
+        Retrieves the audio file for a specific sample associated with a given voice using the specified voice_id and sample_id.
+
         Args:
-            voice_id: The unique identifier of the voice whose sample audio is to be retrieved.
-            sample_id: The unique identifier of the sample whose audio data is requested.
-        
+            voice_id (string): voice_id
+            sample_id (string): sample_id
+
         Returns:
-            A JSON-decoded object containing the audio data and metadata for the specified sample.
-        
-        Raises:
-            ValueError: Raised if 'voice_id' or 'sample_id' is None.
-            requests.HTTPError: Raised if the HTTP request to fetch the audio fails with a non-2xx status code.
-        
+            Any: Success
+
         Tags:
-            get, audio, sample, voice, api
+            Samples
         """
         if voice_id is None:
             raise ValueError("Missing required parameter 'voice_id'")
@@ -203,40 +170,39 @@ class ElevenlabsApp(APIApplication):
         response.raise_for_status()
         return response.json()
 
-    def text_to_speech_v1_text_to_speech__voice_id__post(self, voice_id, text, optimize_streaming_latency=None, output_format=None, model_id=None, voice_settings=None, pronunciation_dictionary_locators=None, seed=None) -> Any:
+    def convert(self, voice_id, optimize_streaming_latency=None, output_format=None, text=None, voice_settings=None) -> Any:
         """
-        Converts input text to speech using the specified voice configuration via a POST request to the text-to-speech API endpoint.
-        
+        Converts text into speech using a specified voice, allowing for optimization of streaming latency and selection of output format.
+
         Args:
-            voice_id: str. The identifier of the voice to use for speech synthesis.
-            text: str. The input text to be converted into speech.
-            optimize_streaming_latency: Optional[int]. Controls streaming latency optimization; lower values may reduce initial playback delay.
-            output_format: Optional[str]. Specifies the format of the returned audio (e.g., 'mp3', 'wav').
-            model_id: Optional[str]. Identifier for the specific speech synthesis model to use.
-            voice_settings: Optional[dict]. Additional settings for the selected voice, such as pitch or speed.
-            pronunciation_dictionary_locators: Optional[list]. List of pronunciation dictionary locators to apply custom pronunciations.
-            seed: Optional[int]. Seed value for deterministic speech synthesis output.
-        
+            voice_id (string): voice_id
+            optimize_streaming_latency (string): You can turn on latency optimizations at some cost of quality. The best possible final latency varies by model. Example: '0'.
+            output_format (string): The output format of the generated audio. Example: 'mp3_22050_32'.
+            text (string): text Example: "It sure does, Jackie… My mama always said: “In Carolina, the air's so thick you can wear it!”".
+            voice_settings (object): voice_settings
+                Example:
+                ```json
+                {
+                  "text": "It sure does, Jackie\u2026 My mama always said: \u201cIn Carolina, the air's so thick you can wear it!\u201d",
+                  "voice_settings": {
+                    "similarity_boost": 0.75,
+                    "stability": 0.5,
+                    "style": 0
+                  }
+                }
+                ```
+
         Returns:
-            dict. The JSON-decoded API response containing synthesized audio information or relevant metadata.
-        
-        Raises:
-            ValueError: If 'voice_id' or 'text' is not provided.
-            requests.HTTPError: If the HTTP request to the text-to-speech API fails or returns an unsuccessful status.
-        
+            Any: Success
+
         Tags:
-            text-to-speech, convert, api, voice, synthesis, ai, batch
+            Text To Speech
         """
         if voice_id is None:
             raise ValueError("Missing required parameter 'voice_id'")
-        if text is None:
-            raise ValueError("Missing required parameter 'text'")
         request_body = {
             'text': text,
-            'model_id': model_id,
             'voice_settings': voice_settings,
-            'pronunciation_dictionary_locators': pronunciation_dictionary_locators,
-            'seed': seed,
         }
         request_body = {k: v for k, v in request_body.items() if v is not None}
         url = f"{self.base_url}/v1/text-to-speech/{voice_id}"
@@ -245,40 +211,71 @@ class ElevenlabsApp(APIApplication):
         response.raise_for_status()
         return response.json()
 
-    def text_to_speech_v1_text_to_speech__voice_id__stream_post(self, voice_id, text, optimize_streaming_latency=None, output_format=None, model_id=None, voice_settings=None, pronunciation_dictionary_locators=None, seed=None) -> Any:
+    def text_to_speech_with_timestamps(self, voice_id, text=None) -> dict[str, Any]:
         """
-        Streams synthesized speech audio for given text using a specified voice ID and customizable options.
-        
+        Generates speech from text with precise character or word-level timing information using the specified voice, supporting audio-text synchronization through timestamps.
+
         Args:
-            voice_id: str. The unique identifier for the voice to synthesize speech with. Required.
-            text: str. The input text to be converted to speech. Required.
-            optimize_streaming_latency: Optional[int]. Optimization level for audio streaming latency. If provided, adjusts streaming performance.
-            output_format: Optional[str]. Desired audio output format (e.g., 'mp3', 'wav').
-            model_id: Optional[str]. Specific speech synthesis model ID to use.
-            voice_settings: Optional[dict]. Additional settings for the selected voice (e.g., pitch, speed).
-            pronunciation_dictionary_locators: Optional[List[str]]. List of pronunciation dictionary locators for custom pronunciations.
-            seed: Optional[int]. Random seed for generating non-deterministic voice outputs.
-        
+            voice_id (string): voice_id
+            text (string): text
+                Example:
+                ```json
+                {
+                  "text": "text"
+                }
+                ```
+
         Returns:
-            dict. The API's JSON response containing metadata about the speech synthesis stream and possibly streaming URLs or audio data.
-        
-        Raises:
-            ValueError: Raised if 'voice_id' or 'text' is not provided.
-            requests.HTTPError: Raised if the API request fails with an HTTP error response.
-        
+            dict[str, Any]: Success / Success
+
         Tags:
-            text-to-speech, stream, ai, synthesize, voice, api
+            Text To Speech
         """
         if voice_id is None:
             raise ValueError("Missing required parameter 'voice_id'")
-        if text is None:
-            raise ValueError("Missing required parameter 'text'")
         request_body = {
             'text': text,
-            'model_id': model_id,
+        }
+        request_body = {k: v for k, v in request_body.items() if v is not None}
+        url = f"{self.base_url}/v1/text-to-speech/{voice_id}/with-timestamps"
+        query_params = {}
+        response = self._post(url, data=request_body, params=query_params)
+        response.raise_for_status()
+        return response.json()
+
+    def convert_as_stream(self, voice_id, optimize_streaming_latency=None, output_format=None, text=None, voice_settings=None) -> Any:
+        """
+        Converts text to speech stream using the specified voice ID with configurable latency and output format.
+
+        Args:
+            voice_id (string): voice_id
+            optimize_streaming_latency (string): You can turn on latency optimizations at some cost of quality. The best possible final latency varies by model. Example: '0'.
+            output_format (string): The output format of the generated audio. Example: 'mp3_22050_32'.
+            text (string): text Example: "It sure does, Jackie… My mama always said: “In Carolina, the air's so thick you can wear it!”".
+            voice_settings (object): voice_settings
+                Example:
+                ```json
+                {
+                  "text": "It sure does, Jackie\u2026 My mama always said: \u201cIn Carolina, the air's so thick you can wear it!\u201d",
+                  "voice_settings": {
+                    "similarity_boost": 0.3,
+                    "stability": 0.1,
+                    "style": 0.2
+                  }
+                }
+                ```
+
+        Returns:
+            Any: Success
+
+        Tags:
+            Text To Speech
+        """
+        if voice_id is None:
+            raise ValueError("Missing required parameter 'voice_id'")
+        request_body = {
+            'text': text,
             'voice_settings': voice_settings,
-            'pronunciation_dictionary_locators': pronunciation_dictionary_locators,
-            'seed': seed,
         }
         request_body = {k: v for k, v in request_body.items() if v is not None}
         url = f"{self.base_url}/v1/text-to-speech/{voice_id}/stream"
@@ -287,21 +284,47 @@ class ElevenlabsApp(APIApplication):
         response.raise_for_status()
         return response.json()
 
-    def voice_generation_parameters_v1_voice_generation_generate_voice_parameters_get(self, ) -> dict[str, Any]:
+    def text_to_speech_streaming_with_timestamps(self, voice_id, text=None) -> Any:
         """
-        Retrieves available parameter options for voice generation from the API.
-        
+        Converts text to speech using the specified voice ID, streaming the audio output with timestamps.
+
         Args:
-            None: This function takes no arguments
-        
+            voice_id (string): voice_id
+            text (string): text
+                Example:
+                ```json
+                {
+                  "text": "text"
+                }
+                ```
+
         Returns:
-            A dictionary containing supported parameters and options for the voice generation endpoint.
-        
-        Raises:
-            requests.HTTPError: If the HTTP request to the API fails or an error response is returned.
-        
+            Any: Success / Success
+
         Tags:
-            fetch, parameters, voice-generation, api
+            Text To Speech
+        """
+        if voice_id is None:
+            raise ValueError("Missing required parameter 'voice_id'")
+        request_body = {
+            'text': text,
+        }
+        request_body = {k: v for k, v in request_body.items() if v is not None}
+        url = f"{self.base_url}/v1/text-to-speech/{voice_id}/stream/with-timestamps"
+        query_params = {}
+        response = self._post(url, data=request_body, params=query_params)
+        response.raise_for_status()
+        return response.json()
+
+    def voice_generation_parameters(self) -> dict[str, Any]:
+        """
+        Retrieves the parameters required for generating voice using the specified API endpoint.
+
+        Returns:
+            dict[str, Any]: Success / Success
+
+        Tags:
+            Voice Generation
         """
         url = f"{self.base_url}/v1/voice-generation/generate-voice/parameters"
         query_params = {}
@@ -309,42 +332,38 @@ class ElevenlabsApp(APIApplication):
         response.raise_for_status()
         return response.json()
 
-    def generate_a_random_voice_v1_voice_generation_generate_voice_post(self, gender, accent, age, accent_strength, text) -> Any:
+    def generate_arandom_voice(self, accent=None, accent_strength=None, age=None, gender=None, text=None) -> Any:
         """
-        Generates a synthetic voice audio based on specified demographics and text input by sending a POST request to the voice generation API.
-        
+        Generates an audio file by converting text into speech using a specified voice, allowing for customizable voice selection and text input.
+
         Args:
-            gender: str. The gender for the generated voice (e.g., 'male', 'female'). Required.
-            accent: str. The accent to apply to the synthesized voice (e.g., 'british', 'american'). Required.
-            age: str or int. The age or age group for the generated voice. Required.
-            accent_strength: str or float. The intensity of the accent in the output voice. Required.
-            text: str. The text to be converted into synthetic speech. Required.
-        
+            accent (string): accent Example: 'american'.
+            accent_strength (number): accent_strength Example: '2'.
+            age (string): age Example: 'middle_aged'.
+            gender (string): gender Example: 'female'.
+            text (string): text
+                Example:
+                ```json
+                {
+                  "accent": "american",
+                  "accent_strength": 2,
+                  "age": "middle_aged",
+                  "gender": "female",
+                  "text": "It sure does, Jackie\u2026 My mama always said: \u201cIn Carolina, the air's so thick you can wear it!\u201d"
+                }
+                ```
+
         Returns:
-            dict. The JSON response containing the generated voice data and any related metadata.
-        
-        Raises:
-            ValueError: If any of the required parameters ('gender', 'accent', 'age', 'accent_strength', or 'text') is None.
-            requests.HTTPError: If the API request fails with an HTTP error status.
-        
+            Any: Success
+
         Tags:
-            generate, voice, ai, post
+            Voice Generation
         """
-        if gender is None:
-            raise ValueError("Missing required parameter 'gender'")
-        if accent is None:
-            raise ValueError("Missing required parameter 'accent'")
-        if age is None:
-            raise ValueError("Missing required parameter 'age'")
-        if accent_strength is None:
-            raise ValueError("Missing required parameter 'accent_strength'")
-        if text is None:
-            raise ValueError("Missing required parameter 'text'")
         request_body = {
-            'gender': gender,
             'accent': accent,
-            'age': age,
             'accent_strength': accent_strength,
+            'age': age,
+            'gender': gender,
             'text': text,
         }
         request_body = {k: v for k, v in request_body.items() if v is not None}
@@ -354,37 +373,33 @@ class ElevenlabsApp(APIApplication):
         response.raise_for_status()
         return response.json()
 
-    def create_a_previously_generated_voice_v1_voice_generation_create_voice_post(self, voice_name, voice_description, generated_voice_id, labels=None) -> dict[str, Any]:
+    def create_apreviously_generated_voice(self, generated_voice_id=None, voice_description=None, voice_name=None) -> dict[str, Any]:
         """
-        Creates a new voice entry using data from a previously generated voice.
-        
+        Generates a custom voice using the provided parameters via the "/v1/voice-generation/create-voice" endpoint by sending a POST request, allowing users to create unique voice models.
+
         Args:
-            voice_name: str. The display name for the new voice. Must not be None.
-            voice_description: str. A textual description of the new voice. Must not be None.
-            generated_voice_id: str. The unique identifier of the previously generated voice to use as a template. Must not be None.
-            labels: Optional[dict]. Additional metadata or labels to associate with the voice. Defaults to None.
-        
+            generated_voice_id (string): generated_voice_id Example: 'generated_voice_id'.
+            voice_description (string): voice_description Example: 'voice_description'.
+            voice_name (string): voice_name
+                Example:
+                ```json
+                {
+                  "generated_voice_id": "generated_voice_id",
+                  "voice_description": "voice_description",
+                  "voice_name": "voice_name"
+                }
+                ```
+
         Returns:
-            dict. The server's JSON response containing information about the created voice.
-        
-        Raises:
-            ValueError: Raised if any of the required parameters ('voice_name', 'voice_description', or 'generated_voice_id') are None.
-            requests.HTTPError: Raised if the HTTP request to the voice-generation API fails (non-2xx response).
-        
+            dict[str, Any]: Success / Success
+
         Tags:
-            create, voice, ai, api
+            Voice Generation
         """
-        if voice_name is None:
-            raise ValueError("Missing required parameter 'voice_name'")
-        if voice_description is None:
-            raise ValueError("Missing required parameter 'voice_description'")
-        if generated_voice_id is None:
-            raise ValueError("Missing required parameter 'generated_voice_id'")
         request_body = {
-            'voice_name': voice_name,
-            'voice_description': voice_description,
             'generated_voice_id': generated_voice_id,
-            'labels': labels,
+            'voice_description': voice_description,
+            'voice_name': voice_name,
         }
         request_body = {k: v for k, v in request_body.items() if v is not None}
         url = f"{self.base_url}/v1/voice-generation/create-voice"
@@ -393,21 +408,82 @@ class ElevenlabsApp(APIApplication):
         response.raise_for_status()
         return response.json()
 
-    def get_user_subscription_info_v1_user_subscription_get(self, ) -> dict[str, Any]:
+    def generate_avoice_preview_from_description(self, text=None, voice_description=None) -> dict[str, Any]:
         """
-        Retrieves the current user's subscription information from the API.
-        
+        Generates a voice preview from a given text prompt using the ElevenLabs API.
+
         Args:
-            None: This function takes no arguments
-        
+            text (string): text Example: 'text'.
+            voice_description (string): voice_description
+                Example:
+                ```json
+                {
+                  "text": "text",
+                  "voice_description": "voice_description"
+                }
+                ```
+
         Returns:
-            A dictionary containing the user's subscription details as returned by the API.
-        
-        Raises:
-            requests.HTTPError: If the HTTP request to retrieve subscription information fails or returns an error status code.
-        
+            dict[str, Any]: Success / Success
+
         Tags:
-            get, subscription, user, api
+            Text To Voice
+        """
+        request_body = {
+            'text': text,
+            'voice_description': voice_description,
+        }
+        request_body = {k: v for k, v in request_body.items() if v is not None}
+        url = f"{self.base_url}/v1/text-to-voice/create-previews"
+        query_params = {}
+        response = self._post(url, data=request_body, params=query_params)
+        response.raise_for_status()
+        return response.json()
+
+    def create_anew_voice_from_voice_preview(self, generated_voice_id=None, voice_description=None, voice_name=None) -> dict[str, Any]:
+        """
+        Creates a new voice entry in the voice library using a generated preview ID and returns voice details.
+
+        Args:
+            generated_voice_id (string): generated_voice_id Example: 'generated_voice_id'.
+            voice_description (string): voice_description Example: 'voice_description'.
+            voice_name (string): voice_name
+                Example:
+                ```json
+                {
+                  "generated_voice_id": "generated_voice_id",
+                  "voice_description": "voice_description",
+                  "voice_name": "voice_name"
+                }
+                ```
+
+        Returns:
+            dict[str, Any]: Success / Success
+
+        Tags:
+            Text To Voice
+        """
+        request_body = {
+            'generated_voice_id': generated_voice_id,
+            'voice_description': voice_description,
+            'voice_name': voice_name,
+        }
+        request_body = {k: v for k, v in request_body.items() if v is not None}
+        url = f"{self.base_url}/v1/text-to-voice/create-voice-from-preview"
+        query_params = {}
+        response = self._post(url, data=request_body, params=query_params)
+        response.raise_for_status()
+        return response.json()
+
+    def get_user_subscription_info(self) -> dict[str, Any]:
+        """
+        Retrieves the user's subscription details from the API.
+
+        Returns:
+            dict[str, Any]: Success / Success
+
+        Tags:
+            User
         """
         url = f"{self.base_url}/v1/user/subscription"
         query_params = {}
@@ -415,21 +491,15 @@ class ElevenlabsApp(APIApplication):
         response.raise_for_status()
         return response.json()
 
-    def get_user_info_v1_user_get(self, ) -> dict[str, Any]:
+    def get_user_info(self) -> dict[str, Any]:
         """
-        Retrieves information about the current authenticated user from the API.
-        
-        Args:
-            None: This function takes no arguments
-        
+        Retrieves user information from the API.
+
         Returns:
-            A dictionary containing user details as returned by the API.
-        
-        Raises:
-            requests.HTTPError: If the HTTP request to the user information endpoint fails or returns a non-success status code.
-        
+            dict[str, Any]: Success / Success
+
         Tags:
-            get, user, info, api, important
+            User
         """
         url = f"{self.base_url}/v1/user"
         query_params = {}
@@ -437,21 +507,15 @@ class ElevenlabsApp(APIApplication):
         response.raise_for_status()
         return response.json()
 
-    def get_voices_v1_voices_get(self, ) -> dict[str, Any]:
+    def get_voices(self) -> dict[str, Any]:
         """
-        Retrieves a list of available voices from the v1 API endpoint.
-        
-        Args:
-            None: This function takes no arguments
-        
+        Retrieves a list of voices using the "GET" method at the "/v1/voices" API endpoint.
+
         Returns:
-            dict: A dictionary containing information about the available voices as returned by the API.
-        
-        Raises:
-            requests.HTTPError: Raised if the API response contains an HTTP error status.
-        
+            dict[str, Any]: Success / Success
+
         Tags:
-            get, voices, api, list
+            voices
         """
         url = f"{self.base_url}/v1/voices"
         query_params = {}
@@ -459,18 +523,15 @@ class ElevenlabsApp(APIApplication):
         response.raise_for_status()
         return response.json()
 
-    def get_default_voice_settings__v1_voices_settings_default_get(self, ) -> dict[str, Any]:
+    def get_default_voice_settings(self) -> dict[str, Any]:
         """
-        Retrieves the default voice settings from the API endpoint.
-        
+        Retrieves the default voice settings using the "GET" method at the "/v1/voices/settings/default" endpoint.
+
         Returns:
-            A dictionary containing the default voice settings as returned by the API.
-        
-        Raises:
-            requests.HTTPError: If the HTTP request returned an unsuccessful status code.
-        
+            dict[str, Any]: Success / Success
+
         Tags:
-            get, voice-settings, api, fetch
+            voices
         """
         url = f"{self.base_url}/v1/voices/settings/default"
         query_params = {}
@@ -478,22 +539,18 @@ class ElevenlabsApp(APIApplication):
         response.raise_for_status()
         return response.json()
 
-    def get_voice_settings_v1_voices__voice_id__settings_get(self, voice_id) -> dict[str, Any]:
+    def get_voice_settings(self, voice_id) -> dict[str, Any]:
         """
-        Retrieves the settings for a specific voice using the provided voice ID.
-        
+        Retrieves voice settings for a specific voice identified by `{voice_id}` using the "GET" method, returning the current configuration for that voice.
+
         Args:
-            voice_id: str. The unique identifier of the voice for which to fetch settings.
-        
+            voice_id (string): voice_id
+
         Returns:
-            dict. The settings of the specified voice, parsed from the service response.
-        
-        Raises:
-            ValueError: If 'voice_id' is None.
-            requests.exceptions.HTTPError: If the HTTP request to fetch settings fails (non-2xx response).
-        
+            dict[str, Any]: Success / Success
+
         Tags:
-            get, voice-settings, ai
+            voices
         """
         if voice_id is None:
             raise ValueError("Missing required parameter 'voice_id'")
@@ -503,48 +560,39 @@ class ElevenlabsApp(APIApplication):
         response.raise_for_status()
         return response.json()
 
-    def get_voice_v1_voices__voice_id__get(self, voice_id, with_settings=None) -> dict[str, Any]:
+    def get_voice(self, voice_id) -> dict[str, Any]:
         """
-        Retrieves details for a specific voice, optionally including voice settings, by making a GET request to the API.
-        
+        Retrieves the details of a specific voice by its ID using the "GET" method at the "/v1/voices/{voice_id}" endpoint.
+
         Args:
-            voice_id: str. Unique identifier of the voice to retrieve. Must not be None.
-            with_settings: Optional[bool]. If True, include voice settings in the response. Defaults to None, meaning settings are not included.
-        
+            voice_id (string): voice_id
+
         Returns:
-            dict[str, Any]: A dictionary containing voice details as returned by the API.
-        
-        Raises:
-            ValueError: Raised if 'voice_id' is None.
-            requests.HTTPError: Raised if the HTTP request to the API fails or returns an error response.
-        
+            dict[str, Any]: Success / Success
+
         Tags:
-            get, voice, api, management
+            voices
         """
         if voice_id is None:
             raise ValueError("Missing required parameter 'voice_id'")
         url = f"{self.base_url}/v1/voices/{voice_id}"
-        query_params = {k: v for k, v in [('with_settings', with_settings)] if v is not None}
+        query_params = {}
         response = self._get(url, params=query_params)
         response.raise_for_status()
         return response.json()
 
-    def delete_voice_v1_voices__voice_id__delete(self, voice_id) -> Any:
+    def delete_voice(self, voice_id) -> dict[str, Any]:
         """
-        Deletes a voice resource identified by the given voice ID using the v1 API endpoint.
-        
+        Deletes a voice with the specified ID using the DELETE method at the "/v1/voices/{voice_id}" endpoint.
+
         Args:
-            voice_id: str. Unique identifier of the voice resource to be deleted.
-        
+            voice_id (string): voice_id
+
         Returns:
-            dict. Response data from the API after attempting to delete the voice resource.
-        
-        Raises:
-            ValueError: Raised if the 'voice_id' parameter is None.
-            requests.HTTPError: Raised if the HTTP request to delete the voice fails with an unsuccessful status code.
-        
+            dict[str, Any]: Success / Success
+
         Tags:
-            delete, voice-management, api
+            voices
         """
         if voice_id is None:
             raise ValueError("Missing required parameter 'voice_id'")
@@ -554,31 +602,92 @@ class ElevenlabsApp(APIApplication):
         response.raise_for_status()
         return response.json()
 
-    def add_sharing_voice_v1_voices_add__public_user_id___voice_id__post(self, public_user_id, voice_id, new_name) -> dict[str, Any]:
+    def add_voice(self, name=None) -> dict[str, Any]:
         """
-        Adds a shared voice for a public user by sending a POST request with a new name for the specified voice.
-        
+        Adds a new voice entry to the voices collection using the provided data.
+
         Args:
-            public_user_id: str. The public user identifier to whom the voice will be shared.
-            voice_id: str. The unique identifier of the voice to add.
-            new_name: str. The new name to assign to the shared voice.
-        
+            name (string): name
+                Example:
+                ```json
+                {
+                  "name": "Alex"
+                }
+                ```
+
         Returns:
-            dict[str, Any]: The JSON response from the server containing details about the shared voice addition.
-        
-        Raises:
-            ValueError: Raised if any of the required parameters ('public_user_id', 'voice_id', or 'new_name') are None.
-            requests.HTTPError: Raised if the HTTP request to the server returns an unsuccessful status code.
-        
+            dict[str, Any]: Success
+
         Tags:
-            add, sharing, voice, api, post, management
+            voices
+        """
+        request_body = {
+            'name': name,
+        }
+        request_body = {k: v for k, v in request_body.items() if v is not None}
+        url = f"{self.base_url}/v1/voices/add"
+        query_params = {}
+        response = self._post(url, data=request_body, params=query_params)
+        response.raise_for_status()
+        return response.json()
+
+    def edit_voice(self, voice_id, name=None) -> dict[str, Any]:
+        """
+        Updates the specified voice by ID using a POST request and returns a success status upon completion.
+
+        Args:
+            voice_id (string): voice_id
+            name (string): name
+                Example:
+                ```json
+                {
+                  "name": "George"
+                }
+                ```
+
+        Returns:
+            dict[str, Any]: Success
+
+        Tags:
+            voices
+        """
+        if voice_id is None:
+            raise ValueError("Missing required parameter 'voice_id'")
+        request_body = {
+            'name': name,
+        }
+        request_body = {k: v for k, v in request_body.items() if v is not None}
+        url = f"{self.base_url}/v1/voices/{voice_id}/edit"
+        query_params = {}
+        response = self._post(url, data=request_body, params=query_params)
+        response.raise_for_status()
+        return response.json()
+
+    def add_sharing_voice(self, public_user_id, voice_id, new_name=None) -> dict[str, Any]:
+        """
+        Adds a voice associated with a public user ID and voice ID using the specified API endpoint.
+
+        Args:
+            public_user_id (string): public_user_id
+            voice_id (string): voice_id
+            new_name (string): new_name
+                Example:
+                ```json
+                {
+                  "new_name": "new_name"
+                }
+                ```
+
+        Returns:
+            dict[str, Any]: Success / Success
+
+        Tags:
+            voices
         """
         if public_user_id is None:
             raise ValueError("Missing required parameter 'public_user_id'")
         if voice_id is None:
             raise ValueError("Missing required parameter 'voice_id'")
-        if new_name is None:
-            raise ValueError("Missing required parameter 'new_name'")
         request_body = {
             'new_name': new_name,
         }
@@ -589,18 +698,57 @@ class ElevenlabsApp(APIApplication):
         response.raise_for_status()
         return response.json()
 
-    def get_projects_v1_projects_get(self, ) -> dict[str, Any]:
+    def get_shared_voices(self, page_size=None, gender=None, language=None) -> dict[str, Any]:
         """
-        Retrieves a list of projects from the API using a GET request to the '/v1/projects' endpoint.
-        
+        Retrieves a list of shared voices filtered by parameters like gender and language, with pagination support via page_size.
+
+        Args:
+            page_size (string): How many shared voices to return at maximum. Can not exceed 100, defaults to 30. Example: '1'.
+            gender (string): gender used for filtering Example: 'female'.
+            language (string): language used for filtering Example: 'en'.
+
         Returns:
-            A dictionary containing the JSON-decoded response from the API, typically representing a list of projects.
-        
-        Raises:
-            requests.HTTPError: If the HTTP request to the projects API endpoint fails or returns an unsuccessful status code.
-        
+            dict[str, Any]: Success / Success
+
         Tags:
-            get, list, projects, api, management
+            voices
+        """
+        url = f"{self.base_url}/v1/shared-voices"
+        query_params = {k: v for k, v in [('page_size', page_size), ('gender', gender), ('language', language)] if v is not None}
+        response = self._get(url, params=query_params)
+        response.raise_for_status()
+        return response.json()
+
+    def get_aprofile_page(self, handle) -> dict[str, Any]:
+        """
+        Retrieves a unified customer profile by handle and returns the associated attributes, identifiers, and traits.
+
+        Args:
+            handle (string): handle
+
+        Returns:
+            dict[str, Any]: Success / Success
+
+        Tags:
+            voices
+        """
+        if handle is None:
+            raise ValueError("Missing required parameter 'handle'")
+        url = f"{self.base_url}/profile/{handle}"
+        query_params = {}
+        response = self._get(url, params=query_params)
+        response.raise_for_status()
+        return response.json()
+
+    def get_projects(self) -> dict[str, Any]:
+        """
+        Retrieves a list of projects using the API defined at the "/v1/projects" endpoint via the GET method.
+
+        Returns:
+            dict[str, Any]: Success / Success
+
+        Tags:
+            Projects
         """
         url = f"{self.base_url}/v1/projects"
         query_params = {}
@@ -608,22 +756,56 @@ class ElevenlabsApp(APIApplication):
         response.raise_for_status()
         return response.json()
 
-    def get_project_by_id_v1_projects__project_id__get(self, project_id) -> dict[str, Any]:
+    def add_project(self, default_model_id=None, default_paragraph_voice_id=None, default_title_voice_id=None, name=None) -> dict[str, Any]:
         """
-        Retrieve project details by project ID using the v1 projects API.
-        
+        Creates a new project and returns a status message.
+
         Args:
-            project_id: str. The unique identifier of the project to retrieve.
-        
+            default_model_id (string): default_model_id Example: 'default_model_id'.
+            default_paragraph_voice_id (string): default_paragraph_voice_id Example: 'default_paragraph_voice_id'.
+            default_title_voice_id (string): default_title_voice_id Example: 'default_title_voice_id'.
+            name (string): name
+                Example:
+                ```json
+                {
+                  "default_model_id": "default_model_id",
+                  "default_paragraph_voice_id": "default_paragraph_voice_id",
+                  "default_title_voice_id": "default_title_voice_id",
+                  "name": "name"
+                }
+                ```
+
         Returns:
-            dict[str, Any]: A dictionary containing the project's details as returned by the API.
-        
-        Raises:
-            ValueError: If 'project_id' is None.
-            HTTPError: If the HTTP request to the API fails with a non-success status code.
-        
+            dict[str, Any]: Success
+
         Tags:
-            get, project, management, api
+            Projects
+        """
+        request_body = {
+            'default_model_id': default_model_id,
+            'default_paragraph_voice_id': default_paragraph_voice_id,
+            'default_title_voice_id': default_title_voice_id,
+            'name': name,
+        }
+        request_body = {k: v for k, v in request_body.items() if v is not None}
+        url = f"{self.base_url}/v1/projects/add"
+        query_params = {}
+        response = self._post(url, data=request_body, params=query_params)
+        response.raise_for_status()
+        return response.json()
+
+    def get_project_by_id(self, project_id) -> dict[str, Any]:
+        """
+        Retrieves information for a specific project identified by `{project_id}` using the API endpoint at "/v1/projects/{project_id}" via the GET method.
+
+        Args:
+            project_id (string): project_id
+
+        Returns:
+            dict[str, Any]: Success / Success
+
+        Tags:
+            Projects
         """
         if project_id is None:
             raise ValueError("Missing required parameter 'project_id'")
@@ -633,22 +815,56 @@ class ElevenlabsApp(APIApplication):
         response.raise_for_status()
         return response.json()
 
-    def delete_project_v1_projects__project_id__delete(self, project_id) -> Any:
+    def edit_basic_project_info(self, project_id, default_paragraph_voice_id=None, default_title_voice_id=None, name=None) -> dict[str, Any]:
         """
-        Deletes a project by its ID using a DELETE HTTP request to the v1/projects endpoint.
-        
+        Creates a new project resource by sending data to the specified project identifier using the POST method at the "/v1/projects/{project_id}" endpoint.
+
         Args:
-            project_id: The unique identifier of the project to be deleted. Must not be None.
-        
+            project_id (string): project_id
+            default_paragraph_voice_id (string): default_paragraph_voice_id Example: 'default_paragraph_voice_id'.
+            default_title_voice_id (string): default_title_voice_id Example: 'default_title_voice_id'.
+            name (string): name
+                Example:
+                ```json
+                {
+                  "default_paragraph_voice_id": "default_paragraph_voice_id",
+                  "default_title_voice_id": "default_title_voice_id",
+                  "name": "name"
+                }
+                ```
+
         Returns:
-            dict: The JSON response from the API after successful deletion of the project.
-        
-        Raises:
-            ValueError: If 'project_id' is None.
-            requests.HTTPError: If the API response contains an unsuccessful HTTP status code.
-        
+            dict[str, Any]: Success / Success
+
         Tags:
-            delete, project, api, management
+            Projects
+        """
+        if project_id is None:
+            raise ValueError("Missing required parameter 'project_id'")
+        request_body = {
+            'default_paragraph_voice_id': default_paragraph_voice_id,
+            'default_title_voice_id': default_title_voice_id,
+            'name': name,
+        }
+        request_body = {k: v for k, v in request_body.items() if v is not None}
+        url = f"{self.base_url}/v1/projects/{project_id}"
+        query_params = {}
+        response = self._post(url, data=request_body, params=query_params)
+        response.raise_for_status()
+        return response.json()
+
+    def delete_project(self, project_id) -> dict[str, Any]:
+        """
+        Deletes the specified project and returns a success status upon completion.
+
+        Args:
+            project_id (string): project_id
+
+        Returns:
+            dict[str, Any]: Success / Success
+
+        Tags:
+            Projects
         """
         if project_id is None:
             raise ValueError("Missing required parameter 'project_id'")
@@ -658,22 +874,18 @@ class ElevenlabsApp(APIApplication):
         response.raise_for_status()
         return response.json()
 
-    def convert_project_v1_projects__project_id__convert_post(self, project_id) -> Any:
+    def convert_project(self, project_id) -> dict[str, Any]:
         """
-        Converts the specified project by sending a POST request to the appropriate API endpoint.
-        
+        Converts a specified project identified by project_id and returns the conversion result.
+
         Args:
-            project_id: The unique identifier of the project to convert. Must not be None.
-        
+            project_id (string): project_id
+
         Returns:
-            A dictionary containing the JSON response from the API after converting the project.
-        
-        Raises:
-            ValueError: If 'project_id' is None.
-            requests.HTTPError: If the API response contains an unsuccessful HTTP status code.
-        
+            dict[str, Any]: Success / Success
+
         Tags:
-            convert, project, api, post
+            Projects
         """
         if project_id is None:
             raise ValueError("Missing required parameter 'project_id'")
@@ -683,22 +895,18 @@ class ElevenlabsApp(APIApplication):
         response.raise_for_status()
         return response.json()
 
-    def get_project_snapshots_v1_projects__project_id__snapshots_get(self, project_id) -> dict[str, Any]:
+    def get_project_snapshots(self, project_id) -> dict[str, Any]:
         """
-        Retrieves a list of snapshots for the specified project using the v1 projects API.
-        
+        Retrieves a list of snapshots associated with a specified project.
+
         Args:
-            project_id: str. Unique identifier of the project for which snapshots are to be fetched.
-        
+            project_id (string): project_id
+
         Returns:
-            dict[str, Any]: The JSON response containing snapshot information for the given project.
-        
-        Raises:
-            ValueError: If project_id is None.
-            requests.HTTPError: If the HTTP request to the API endpoint results in an error status code.
-        
+            dict[str, Any]: Success / Success
+
         Tags:
-            get, list, snapshots, project-management, api
+            Projects
         """
         if project_id is None:
             raise ValueError("Missing required parameter 'project_id'")
@@ -708,56 +916,19 @@ class ElevenlabsApp(APIApplication):
         response.raise_for_status()
         return response.json()
 
-    def stream_project_audio_v1_projects__project_id__snapshots__project_snapshot_id__stream_post(self, project_id, project_snapshot_id, convert_to_mpeg=None) -> Any:
+    def streams_archive_with_project_audio(self, project_id, project_snapshot_id) -> Any:
         """
-        Streams audio data for a specific project snapshot, with optional conversion to MPEG format.
-        
-        Args:
-            project_id: str. The unique identifier of the project whose audio snapshot is to be streamed.
-            project_snapshot_id: str. The unique identifier of the project snapshot to stream audio from.
-            convert_to_mpeg: Optional[bool]. If True, converts the audio stream to MPEG format before streaming. Defaults to None.
-        
-        Returns:
-            dict. The JSON response containing the streamed audio data or relevant streaming metadata from the server.
-        
-        Raises:
-            ValueError: Raised if 'project_id' or 'project_snapshot_id' is not provided.
-            requests.HTTPError: Raised if the HTTP request to the streaming endpoint fails.
-        
-        Tags:
-            stream, audio, project, snapshot, post
-        """
-        if project_id is None:
-            raise ValueError("Missing required parameter 'project_id'")
-        if project_snapshot_id is None:
-            raise ValueError("Missing required parameter 'project_snapshot_id'")
-        request_body = {
-            'convert_to_mpeg': convert_to_mpeg,
-        }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        url = f"{self.base_url}/v1/projects/{project_id}/snapshots/{project_snapshot_id}/stream"
-        query_params = {}
-        response = self._post(url, data=request_body, params=query_params)
-        response.raise_for_status()
-        return response.json()
+        Archives a project snapshot using the specified project ID and snapshot ID and returns a success status.
 
-    def streams_archive_with_project_audio_v1_projects__project_id__snapshots__project_snapshot_id__archive_post(self, project_id, project_snapshot_id) -> Any:
-        """
-        Creates an audio archive for the specified project snapshot by making a POST request to the project's archive endpoint.
-        
         Args:
-            project_id: The unique identifier of the project for which the snapshot archive is to be created.
-            project_snapshot_id: The unique identifier of the project snapshot to archive.
-        
+            project_id (string): project_id
+            project_snapshot_id (string): project_snapshot_id
+
         Returns:
-            A dictionary containing the response data from the archive creation request.
-        
-        Raises:
-            ValueError: Raised if 'project_id' or 'project_snapshot_id' is None.
-            requests.HTTPError: Raised if the HTTP request to the archive endpoint returns an unsuccessful status code.
-        
+            Any: Success / Success
+
         Tags:
-            archive, post, ai, management
+            Projects
         """
         if project_id is None:
             raise ValueError("Missing required parameter 'project_id'")
@@ -769,22 +940,91 @@ class ElevenlabsApp(APIApplication):
         response.raise_for_status()
         return response.json()
 
-    def get_chapters_v1_projects__project_id__chapters_get(self, project_id) -> dict[str, Any]:
+    def add_chapter_to_aproject(self, project_id, name=None) -> dict[str, Any]:
         """
-        Retrieves the list of chapters for a specific project by project ID.
-        
+        Adds a new chapter to a specified project using the provided project identifier and returns a success status upon completion.
+
         Args:
-            project_id: The unique identifier of the project whose chapters are to be fetched.
-        
+            project_id (string): project_id
+            name (string): name
+                Example:
+                ```json
+                {
+                  "name": "name"
+                }
+                ```
+
         Returns:
-            A dictionary representing the JSON response containing the project's chapters.
-        
-        Raises:
-            ValueError: Raised if 'project_id' is None.
-            requests.HTTPError: Raised if the HTTP request to the API endpoint fails.
-        
+            dict[str, Any]: Success / Success
+
         Tags:
-            get, chapters, project, api
+            Projects
+        """
+        if project_id is None:
+            raise ValueError("Missing required parameter 'project_id'")
+        request_body = {
+            'name': name,
+        }
+        request_body = {k: v for k, v in request_body.items() if v is not None}
+        url = f"{self.base_url}/v1/projects/{project_id}/chapters/add"
+        query_params = {}
+        response = self._post(url, data=request_body, params=query_params)
+        response.raise_for_status()
+        return response.json()
+
+    def update_pronunciation_dictionaries(self, project_id, pronunciation_dictionary_locators=None) -> dict[str, Any]:
+        """
+        Updates pronunciation dictionaries for a specified project using the POST method, returning a successful status message upon completion.
+
+        Args:
+            project_id (string): project_id
+            pronunciation_dictionary_locators (array): pronunciation_dictionary_locators
+                Example:
+                ```json
+                {
+                  "pronunciation_dictionary_locators": [
+                    {
+                      "pronunciation_dictionary_id": "pronunciation_dictionary_id",
+                      "version_id": "version_id"
+                    },
+                    {
+                      "pronunciation_dictionary_id": "pronunciation_dictionary_id",
+                      "version_id": "version_id"
+                    }
+                  ]
+                }
+                ```
+
+        Returns:
+            dict[str, Any]: Success / Success
+
+        Tags:
+            Projects
+        """
+        if project_id is None:
+            raise ValueError("Missing required parameter 'project_id'")
+        request_body = {
+            'pronunciation_dictionary_locators': pronunciation_dictionary_locators,
+        }
+        request_body = {k: v for k, v in request_body.items() if v is not None}
+        url = f"{self.base_url}/v1/projects/{project_id}/update-pronunciation-dictionaries"
+        query_params = {}
+        response = self._post(url, data=request_body, params=query_params)
+        response.raise_for_status()
+        return response.json()
+
+    def get_chapters(self, project_id) -> dict[str, Any]:
+        """
+        Retrieves a chapter for a specified project by ID using the GET method.
+
+        Args:
+            project_id (string): project_id
+
+        Returns:
+            dict[str, Any]: Success / Success
+
+        Tags:
+            Chapters
         """
         if project_id is None:
             raise ValueError("Missing required parameter 'project_id'")
@@ -794,23 +1034,19 @@ class ElevenlabsApp(APIApplication):
         response.raise_for_status()
         return response.json()
 
-    def get_chapter_by_id_v1_projects__project_id__chapters__chapter_id__get(self, project_id, chapter_id) -> dict[str, Any]:
+    def get_chapter_by_id(self, project_id, chapter_id) -> dict[str, Any]:
         """
-        Retrieves a specific chapter resource by its ID from a given project using the API.
-        
+        Retrieves a specific chapter within a project identified by project_id and chapter_id.
+
         Args:
-            project_id: The unique identifier of the project containing the desired chapter.
-            chapter_id: The unique identifier of the chapter to retrieve.
-        
+            project_id (string): project_id
+            chapter_id (string): chapter_id
+
         Returns:
-            A dictionary containing the chapter data as returned by the API.
-        
-        Raises:
-            ValueError: Raised if either 'project_id' or 'chapter_id' is None.
-            HTTPError: Raised if the HTTP request to the API fails or returns an error status.
-        
+            dict[str, Any]: Success / Success
+
         Tags:
-            get, chapter, project, api
+            Chapters
         """
         if project_id is None:
             raise ValueError("Missing required parameter 'project_id'")
@@ -822,23 +1058,19 @@ class ElevenlabsApp(APIApplication):
         response.raise_for_status()
         return response.json()
 
-    def delete_chapter_v1_projects__project_id__chapters__chapter_id__delete(self, project_id, chapter_id) -> Any:
+    def delete_chapter(self, project_id, chapter_id) -> dict[str, Any]:
         """
-        Deletes a specific chapter from a project by its project and chapter IDs.
-        
+        Deletes a specific chapter within a project using the "DELETE" method.
+
         Args:
-            project_id: The unique identifier of the project containing the chapter to delete.
-            chapter_id: The unique identifier of the chapter to delete from the project.
-        
+            project_id (string): project_id
+            chapter_id (string): chapter_id
+
         Returns:
-            The response body as a dictionary representing the result of the deletion operation.
-        
-        Raises:
-            ValueError: If either 'project_id' or 'chapter_id' is None.
-            requests.HTTPError: If the HTTP request fails or returns an unsuccessful status code.
-        
+            dict[str, Any]: Success / Success
+
         Tags:
-            delete, chapter, project-management, api
+            Chapters
         """
         if project_id is None:
             raise ValueError("Missing required parameter 'project_id'")
@@ -850,23 +1082,19 @@ class ElevenlabsApp(APIApplication):
         response.raise_for_status()
         return response.json()
 
-    def convert_chapter_v1_projects__project_id__chapters__chapter_id__convert_post(self, project_id, chapter_id) -> Any:
+    def convert_chapter(self, project_id, chapter_id) -> dict[str, Any]:
         """
-        Initiates a conversion operation for a specified chapter within a project and returns the result as JSON.
-        
+        Converts a chapter in a project using the POST method and returns a response upon successful conversion.
+
         Args:
-            project_id: The unique identifier of the project containing the chapter to convert.
-            chapter_id: The unique identifier of the chapter within the project to be converted.
-        
+            project_id (string): project_id
+            chapter_id (string): chapter_id
+
         Returns:
-            A JSON object containing the result of the chapter conversion operation.
-        
-        Raises:
-            ValueError: Raised if 'project_id' or 'chapter_id' is not provided.
-            requests.HTTPError: Raised if the POST request to the conversion endpoint fails.
-        
+            dict[str, Any]: Success / Success
+
         Tags:
-            convert, chapter, post, api, async-job
+            Chapters
         """
         if project_id is None:
             raise ValueError("Missing required parameter 'project_id'")
@@ -878,23 +1106,19 @@ class ElevenlabsApp(APIApplication):
         response.raise_for_status()
         return response.json()
 
-    def get_chapter_snapshots_v1_projects__project_id__chapters__chapter_id__snapshots_get(self, project_id, chapter_id) -> dict[str, Any]:
+    def get_chapter_snapshots(self, project_id, chapter_id) -> dict[str, Any]:
         """
-        Retrieves the list of chapter snapshots for a specific chapter within a project.
-        
+        Retrieves a snapshot for a specific chapter within a project using the provided project and chapter IDs.
+
         Args:
-            project_id: The unique identifier of the project containing the chapter.
-            chapter_id: The unique identifier of the chapter whose snapshots are to be retrieved.
-        
+            project_id (string): project_id
+            chapter_id (string): chapter_id
+
         Returns:
-            A dictionary containing the snapshot data for the specified chapter.
-        
-        Raises:
-            ValueError: Raised if either 'project_id' or 'chapter_id' is None.
-            HTTPError: Raised if the HTTP request to retrieve snapshots fails.
-        
+            dict[str, Any]: Success / Success
+
         Tags:
-            get, list, snapshots, project-management, chapter
+            Chapters
         """
         if project_id is None:
             raise ValueError("Missing required parameter 'project_id'")
@@ -906,90 +1130,47 @@ class ElevenlabsApp(APIApplication):
         response.raise_for_status()
         return response.json()
 
-    def stream_chapter_audio_v1_projects__project_id__chapters__chapter_id__snapshots__chapter_snapshot_id__stream_post(self, project_id, chapter_id, chapter_snapshot_id, convert_to_mpeg=None) -> Any:
+    def dub_avideo_or_an_audio_file(self, target_lang=None) -> dict[str, Any]:
         """
-        Streams the audio for a specific chapter snapshot in a project, with optional conversion to MPEG format.
-        
+        Initiates a dubbing process and returns a status message using the API defined at the "/v1/dubbing" endpoint via the POST method.
+
         Args:
-            project_id: str. Unique identifier of the project containing the chapter.
-            chapter_id: str. Identifier of the chapter whose audio is to be streamed.
-            chapter_snapshot_id: str. Identifier of the chapter snapshot to stream audio from.
-            convert_to_mpeg: bool, optional. If True, converts the audio stream to MPEG format before returning.
-        
+            target_lang (string): target_lang
+                Example:
+                ```json
+                {
+                  "target_lang": "target_lang"
+                }
+                ```
+
         Returns:
-            dict. JSON response containing audio stream details or metadata.
-        
-        Raises:
-            ValueError: If any of the required parameters ('project_id', 'chapter_id', or 'chapter_snapshot_id') are missing.
-            requests.HTTPError: If the HTTP request to the audio streaming endpoint fails.
-        
+            dict[str, Any]: Success
+
         Tags:
-            stream, audio, chapter, project, ai
+            Dubbing
         """
-        if project_id is None:
-            raise ValueError("Missing required parameter 'project_id'")
-        if chapter_id is None:
-            raise ValueError("Missing required parameter 'chapter_id'")
-        if chapter_snapshot_id is None:
-            raise ValueError("Missing required parameter 'chapter_snapshot_id'")
         request_body = {
-            'convert_to_mpeg': convert_to_mpeg,
+            'target_lang': target_lang,
         }
         request_body = {k: v for k, v in request_body.items() if v is not None}
-        url = f"{self.base_url}/v1/projects/{project_id}/chapters/{chapter_id}/snapshots/{chapter_snapshot_id}/stream"
+        url = f"{self.base_url}/v1/dubbing"
         query_params = {}
         response = self._post(url, data=request_body, params=query_params)
         response.raise_for_status()
         return response.json()
 
-    def update_pronunciation_dictionaries_v1_projects__project_id__update_pronunciation_dictionaries_post(self, project_id, pronunciation_dictionary_locators) -> Any:
+    def get_dubbing_project_metadata(self, dubbing_id) -> dict[str, Any]:
         """
-        Updates the pronunciation dictionaries for a specific project by sending the provided dictionary locators to the server.
-        
-        Args:
-            project_id: str. The unique identifier of the project whose pronunciation dictionaries are to be updated.
-            pronunciation_dictionary_locators: Any. The locators or references to the pronunciation dictionaries that should be updated for the project.
-        
-        Returns:
-            Any. The JSON-decoded response from the server after updating the pronunciation dictionaries.
-        
-        Raises:
-            ValueError: Raised if 'project_id' or 'pronunciation_dictionary_locators' is None.
-            requests.HTTPError: Raised if the server responds with an unsuccessful HTTP status code.
-        
-        Tags:
-            update, pronunciation-dictionaries, project-management, api-call
-        """
-        if project_id is None:
-            raise ValueError("Missing required parameter 'project_id'")
-        if pronunciation_dictionary_locators is None:
-            raise ValueError("Missing required parameter 'pronunciation_dictionary_locators'")
-        request_body = {
-            'pronunciation_dictionary_locators': pronunciation_dictionary_locators,
-        }
-        request_body = {k: v for k, v in request_body.items() if v is not None}
-        url = f"{self.base_url}/v1/projects/{project_id}/update-pronunciation-dictionaries"
-        query_params = {}
-        response = self._post(url, data=request_body, params=query_params)
-        response.raise_for_status()
-        return response.json()
+        Retrieves the details of a specific dubbing job using the provided dubbing ID.
 
-    def get_dubbing_project_metadata_v1_dubbing__dubbing_id__get(self, dubbing_id) -> dict[str, Any]:
-        """
-        Retrieves metadata for a dubbing project by its unique identifier.
-        
         Args:
-            dubbing_id: str. The unique identifier of the dubbing project to retrieve metadata for.
-        
+            dubbing_id (string): dubbing_id
+
         Returns:
-            dict[str, Any]: A dictionary containing metadata of the specified dubbing project.
-        
-        Raises:
-            ValueError: If 'dubbing_id' is None.
-            requests.HTTPError: If the HTTP request to fetch metadata fails.
-        
+            dict[str, Any]: Success / Success
+
         Tags:
-            get, fetch, dubbing, metadata, api
+            Dubbing
         """
         if dubbing_id is None:
             raise ValueError("Missing required parameter 'dubbing_id'")
@@ -999,22 +1180,18 @@ class ElevenlabsApp(APIApplication):
         response.raise_for_status()
         return response.json()
 
-    def delete_dubbing_project_v1_dubbing__dubbing_id__delete(self, dubbing_id) -> Any:
+    def delete_dubbing_project(self, dubbing_id) -> dict[str, Any]:
         """
-        Deletes a dubbing project identified by its ID via the v1 API endpoint.
-        
+        Deletes a dubbing project with the specified ID and returns a success status upon completion.
+
         Args:
-            dubbing_id: The unique identifier of the dubbing project to delete.
-        
+            dubbing_id (string): dubbing_id
+
         Returns:
-            A dictionary parsed from the JSON response indicating the result of the deletion operation.
-        
-        Raises:
-            ValueError: If 'dubbing_id' is None.
-            requests.HTTPError: If the HTTP request to delete the dubbing project fails (non-success status code).
-        
+            dict[str, Any]: Success / Success
+
         Tags:
-            delete, dubbing, api, management
+            Dubbing
         """
         if dubbing_id is None:
             raise ValueError("Missing required parameter 'dubbing_id'")
@@ -1024,51 +1201,19 @@ class ElevenlabsApp(APIApplication):
         response.raise_for_status()
         return response.json()
 
-    def get_dubbed_file_v1_dubbing__dubbing_id__audio__language_code__get(self, dubbing_id, language_code) -> Any:
+    def get_transcript_for_dub(self, dubbing_id, language_code) -> dict[str, Any]:
         """
-        Retrieves the dubbed audio file for a given dubbing ID and language code from the API.
-        
-        Args:
-            dubbing_id: The unique identifier of the dubbing resource to fetch. Must not be None.
-            language_code: The language code (e.g., 'en', 'es') of the audio file to retrieve. Must not be None.
-        
-        Returns:
-            dict: The JSON response containing the dubbed audio file metadata and/or download information.
-        
-        Raises:
-            ValueError: Raised if either 'dubbing_id' or 'language_code' is None.
-            HTTPError: Raised if the HTTP request to the API fails with an unsuccessful status code.
-        
-        Tags:
-            get, audio, dubbing, api
-        """
-        if dubbing_id is None:
-            raise ValueError("Missing required parameter 'dubbing_id'")
-        if language_code is None:
-            raise ValueError("Missing required parameter 'language_code'")
-        url = f"{self.base_url}/v1/dubbing/{dubbing_id}/audio/{language_code}"
-        query_params = {}
-        response = self._get(url, params=query_params)
-        response.raise_for_status()
-        return response.json()
+        Retrieves the transcript for a specific dubbing task in the requested language using the "GET" method.
 
-    def get_transcript_for_dub_v1_dubbing__dubbing_id__transcript__language_code__get(self, dubbing_id, language_code) -> Any:
-        """
-        Retrieves the transcript for a specific dubbing in the requested language.
-        
         Args:
-            dubbing_id: The unique identifier of the dubbing for which to fetch the transcript.
-            language_code: The language code (e.g., 'en', 'es') for the desired transcript.
-        
+            dubbing_id (string): dubbing_id
+            language_code (string): language_code
+
         Returns:
-            The transcript data as parsed from the API response, typically a dictionary or list depending on the API.
-        
-        Raises:
-            ValueError: If 'dubbing_id' or 'language_code' is not provided.
-            requests.HTTPError: If the HTTP request to fetch the transcript fails.
-        
+            dict[str, Any]: Success / Success
+
         Tags:
-            get, transcript, dubbing, api
+            Dubbing
         """
         if dubbing_id is None:
             raise ValueError("Missing required parameter 'dubbing_id'")
@@ -1080,49 +1225,15 @@ class ElevenlabsApp(APIApplication):
         response.raise_for_status()
         return response.json()
 
-    def get_sso_provider_admin_admin__admin_url_prefix__sso_provider_get(self, admin_url_prefix, workspace_id) -> dict[str, Any]:
+    def get_models(self) -> list[Any]:
         """
-        Retrieves SSO provider information for a specific admin URL prefix and workspace.
-        
-        Args:
-            admin_url_prefix: str. The URL prefix identifying the admin scope for the SSO provider.
-            workspace_id: str. The ID of the workspace for which to retrieve SSO provider information.
-        
-        Returns:
-            dict. A dictionary containing the SSO provider information for the specified workspace and admin URL prefix.
-        
-        Raises:
-            ValueError: Raised if either 'admin_url_prefix' or 'workspace_id' is None.
-            requests.HTTPError: Raised if the HTTP request to retrieve SSO provider information fails.
-        
-        Tags:
-            get, sso-provider, admin, management
-        """
-        if admin_url_prefix is None:
-            raise ValueError("Missing required parameter 'admin_url_prefix'")
-        if workspace_id is None:
-            raise ValueError("Missing required parameter 'workspace_id'")
-        url = f"{self.base_url}/admin/{admin_url_prefix}/sso-provider"
-        query_params = {k: v for k, v in [('workspace_id', workspace_id)] if v is not None}
-        response = self._get(url, params=query_params)
-        response.raise_for_status()
-        return response.json()
+        Retrieves a list of models using the GET method at the "/v1/models" endpoint.
 
-    def get_models_v1_models_get(self, ) -> list[Any]:
-        """
-        Retrieves a list of available models from the v1 API endpoint.
-        
-        Args:
-            None: This function takes no arguments
-        
         Returns:
-            A list containing model information retrieved from the API.
-        
-        Raises:
-            requests.HTTPError: If the HTTP request to the models endpoint returns an unsuccessful status code.
-        
+            list[Any]: Success / Success
+
         Tags:
-            get, models, ai, api, list
+            Models
         """
         url = f"{self.base_url}/v1/models"
         query_params = {}
@@ -1130,63 +1241,117 @@ class ElevenlabsApp(APIApplication):
         response.raise_for_status()
         return response.json()
 
-    def get_voices_v1_shared_voices_get(self, page_size=None, category=None, gender=None, age=None, accent=None, language=None, search=None, use_cases=None, descriptives=None, featured=None, reader_app_enabled=None, owner_id=None, sort=None, page=None) -> dict[str, Any]:
+    def creates_audionative_enabled_project(self, name=None) -> dict[str, Any]:
         """
-        Retrieves a list of shared voice resources, filtered and paginated according to the specified criteria.
-        
+        Processes audio data using the audio-native API and returns a response.
+
         Args:
-            page_size: Optional; The number of voice results to return per page.
-            category: Optional; Filter voices by category (e.g., audiobook, narration, commercial).
-            gender: Optional; Filter voices by gender (e.g., male, female, neutral).
-            age: Optional; Filter voices by age group (e.g., child, adult, senior).
-            accent: Optional; Filter voices by accent or dialect.
-            language: Optional; Filter voices by language code or name.
-            search: Optional; Search query string to match against voice names or descriptions.
-            use_cases: Optional; Filter voices by specific use cases.
-            descriptives: Optional; Filter voices by descriptive attributes (e.g., warm, energetic).
-            featured: Optional; Filter to only featured voices if True.
-            reader_app_enabled: Optional; Filter voices available in the reader app.
-            owner_id: Optional; Filter voices by the owner's identifier.
-            sort: Optional; Sort order for returned voices (e.g., by relevance or name).
-            page: Optional; The page number for paginated results.
-        
+            name (string): name
+                Example:
+                ```json
+                {
+                  "name": "name"
+                }
+                ```
+
         Returns:
-            A dictionary containing metadata and a list of shared voice resources matching the provided filters.
-        
-        Raises:
-            requests.HTTPError: If the HTTP request to fetch shared voices fails or returns a non-success status code.
-        
+            dict[str, Any]: Success
+
         Tags:
-            get, list, voices, filter, pagination, batch, ai
+            Audio Native
         """
-        url = f"{self.base_url}/v1/shared-voices"
-        query_params = {k: v for k, v in [('page_size', page_size), ('category', category), ('gender', gender), ('age', age), ('accent', accent), ('language', language), ('search', search), ('use_cases', use_cases), ('descriptives', descriptives), ('featured', featured), ('reader_app_enabled', reader_app_enabled), ('owner_id', owner_id), ('sort', sort), ('page', page)] if v is not None}
+        request_body = {
+            'name': name,
+        }
+        request_body = {k: v for k, v in request_body.items() if v is not None}
+        url = f"{self.base_url}/v1/audio-native"
+        query_params = {}
+        response = self._post(url, data=request_body, params=query_params)
+        response.raise_for_status()
+        return response.json()
+
+    def get_characters_usage_metrics(self, start_unix=None, end_unix=None) -> dict[str, Any]:
+        """
+        Retrieves character statistics within a specified time frame using the start and end Unix timestamps provided in the query parameters.
+
+        Args:
+            start_unix (string): UTC Unix timestamp for the start of the usage window, in milliseconds. To include the first day of the window, the timestamp should be at 00:00:00 of that day. Example: '1'.
+            end_unix (string): UTC Unix timestamp for the end of the usage window, in milliseconds. To include the last day of the window, the timestamp should be at 23:59:59 of that day. Example: '1'.
+
+        Returns:
+            dict[str, Any]: Success / Success
+
+        Tags:
+            Usage
+        """
+        url = f"{self.base_url}/v1/usage/character-stats"
+        query_params = {k: v for k, v in [('start_unix', start_unix), ('end_unix', end_unix)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
         return response.json()
 
-    def add_rules_to_the_pronunciation_dictionary_v1_pronunciation_dictionaries__pronunciation_dictionary_id__add_rules_post(self, pronunciation_dictionary_id, rules) -> dict[str, Any]:
+    def add_apronunciation_dictionary(self, name=None) -> dict[str, Any]:
         """
-        Adds new pronunciation rules to a specified pronunciation dictionary by making a POST request to the backend service.
-        
+        Creates a pronunciation dictionary from a lexicon file and returns its ID and metadata.
+
         Args:
-            pronunciation_dictionary_id: The unique identifier of the pronunciation dictionary to which the rules will be added.
-            rules: A list or collection of pronunciation rules to be added to the dictionary.
-        
+            name (string): name
+                Example:
+                ```json
+                {
+                  "name": "name"
+                }
+                ```
+
         Returns:
-            A dictionary containing the server's response data after attempting to add the specified rules.
-        
-        Raises:
-            ValueError: Raised if 'pronunciation_dictionary_id' or 'rules' is None.
-            requests.HTTPError: Raised if the POST request to the backend service fails due to a bad HTTP response.
-        
+            dict[str, Any]: Success
+
         Tags:
-            add, rules, pronunciation-dictionary, post, api, management
+            Pronunciation Dictionary
+        """
+        request_body = {
+            'name': name,
+        }
+        request_body = {k: v for k, v in request_body.items() if v is not None}
+        url = f"{self.base_url}/v1/pronunciation-dictionaries/add-from-file"
+        query_params = {}
+        response = self._post(url, data=request_body, params=query_params)
+        response.raise_for_status()
+        return response.json()
+
+    def add_rules_to_the_pronunciation_dictionary(self, pronunciation_dictionary_id, rules=None) -> dict[str, Any]:
+        """
+        Adds pronunciation rules to a specific pronunciation dictionary identified by its ID using the POST method.
+
+        Args:
+            pronunciation_dictionary_id (string): pronunciation_dictionary_id
+            rules (array): rules
+                Example:
+                ```json
+                {
+                  "rules": [
+                    {
+                      "alias": "alias",
+                      "string_to_replace": "string_to_replace",
+                      "type": "alias"
+                    },
+                    {
+                      "alias": "alias",
+                      "string_to_replace": "string_to_replace",
+                      "type": "alias"
+                    }
+                  ]
+                }
+                ```
+
+        Returns:
+            dict[str, Any]: Success / Success
+
+        Tags:
+            Pronunciation Dictionary
         """
         if pronunciation_dictionary_id is None:
             raise ValueError("Missing required parameter 'pronunciation_dictionary_id'")
-        if rules is None:
-            raise ValueError("Missing required parameter 'rules'")
         request_body = {
             'rules': rules,
         }
@@ -1197,28 +1362,31 @@ class ElevenlabsApp(APIApplication):
         response.raise_for_status()
         return response.json()
 
-    def remove_rules_from_the_pronunciation_dictionary_v1_pronunciation_dictionaries__pronunciation_dictionary_id__remove_rules_post(self, pronunciation_dictionary_id, rule_strings) -> dict[str, Any]:
+    def remove_rules_from_the_pronunciation_dictionary(self, pronunciation_dictionary_id, rule_strings=None) -> dict[str, Any]:
         """
-        Removes specified pronunciation rules from a pronunciation dictionary via a POST request to the API.
-        
+        Removes specified pronunciation rules from a pronunciation dictionary using a POST request.
+
         Args:
-            pronunciation_dictionary_id: str. The unique identifier of the pronunciation dictionary from which to remove rules.
-            rule_strings: list[str]. A list of pronunciation rule strings to be removed from the dictionary.
-        
+            pronunciation_dictionary_id (string): pronunciation_dictionary_id
+            rule_strings (array): rule_strings
+                Example:
+                ```json
+                {
+                  "rule_strings": [
+                    "rule_strings",
+                    "rule_strings"
+                  ]
+                }
+                ```
+
         Returns:
-            dict[str, Any]: A dictionary containing the API response data after removing the rules.
-        
-        Raises:
-            ValueError: Raised when 'pronunciation_dictionary_id' or 'rule_strings' is None.
-            requests.HTTPError: Raised if the API request fails or returns a non-success status code.
-        
+            dict[str, Any]: Success / Success
+
         Tags:
-            remove, pronunciation, dictionary, rules, api, post, management
+            Pronunciation Dictionary
         """
         if pronunciation_dictionary_id is None:
             raise ValueError("Missing required parameter 'pronunciation_dictionary_id'")
-        if rule_strings is None:
-            raise ValueError("Missing required parameter 'rule_strings'")
         request_body = {
             'rule_strings': rule_strings,
         }
@@ -1229,23 +1397,19 @@ class ElevenlabsApp(APIApplication):
         response.raise_for_status()
         return response.json()
 
-    def get_pls_file_with_a_pronunciation_dictionary_version_rules_v1_pronunciation_dictionaries__dictionary_id___version_id__download_get(self, dictionary_id, version_id) -> Any:
+    def get_pls_file_with_apronunciation_dictionary_version_rules(self, dictionary_id, version_id) -> Any:
         """
-        Downloads a pronunciation lexicon (PLS) file for a specific pronunciation dictionary version.
-        
+        Retrieves and downloads a specific version of a pronunciation dictionary file using its dictionary ID and version ID.
+
         Args:
-            dictionary_id: The unique identifier of the pronunciation dictionary to download.
-            version_id: The specific version identifier of the pronunciation dictionary.
-        
+            dictionary_id (string): dictionary_id
+            version_id (string): version_id
+
         Returns:
-            A dictionary containing the JSON response data of the downloaded PLS file.
-        
-        Raises:
-            ValueError: Raised if 'dictionary_id' or 'version_id' is None.
-            HTTPError: Raised if the HTTP request for the PLS file results in a failed status code.
-        
+            Any: Success
+
         Tags:
-            download, pronunciation-dictionary, get, ai
+            Pronunciation Dictionary
         """
         if dictionary_id is None:
             raise ValueError("Missing required parameter 'dictionary_id'")
@@ -1257,93 +1421,398 @@ class ElevenlabsApp(APIApplication):
         response.raise_for_status()
         return response.json()
 
-    def get_metadata_for_a_pronunciation_dictionary_v1_pronunciation_dictionaries__pronunciation_dictionary_id___get(self, pronunciation_dictionary_id) -> dict[str, Any]:
+    def get_metadata_for_apronunciation_dictionary(self, pronunciation_dictionary_id) -> dict[str, Any]:
         """
-        Retrieves metadata for a specific pronunciation dictionary by its ID.
-        
+        Retrieves a specific pronunciation dictionary by its ID using the "GET" method from the "/v1/pronunciation-dictionaries/{pronunciation_dictionary_id}" endpoint.
+
         Args:
-            pronunciation_dictionary_id: The unique identifier of the pronunciation dictionary to retrieve metadata for.
-        
+            pronunciation_dictionary_id (string): pronunciation_dictionary_id
+
         Returns:
-            A dictionary containing the metadata of the specified pronunciation dictionary.
-        
-        Raises:
-            ValueError: If 'pronunciation_dictionary_id' is None.
-            requests.HTTPError: If the HTTP request to retrieve the metadata fails with a non-success status.
-        
+            dict[str, Any]: Success / Success
+
         Tags:
-            get, pronunciation-dictionary, metadata, api
+            Pronunciation Dictionary
         """
         if pronunciation_dictionary_id is None:
             raise ValueError("Missing required parameter 'pronunciation_dictionary_id'")
-        url = f"{self.base_url}/v1/pronunciation-dictionaries/{pronunciation_dictionary_id}/"
+        url = f"{self.base_url}/v1/pronunciation-dictionaries/{pronunciation_dictionary_id}"
         query_params = {}
         response = self._get(url, params=query_params)
         response.raise_for_status()
         return response.json()
 
-    def get_pronunciation_dictionaries_v1_pronunciation_dictionaries__get(self, cursor=None, page_size=None) -> dict[str, Any]:
+    def get_pronunciation_dictionaries(self, page_size=None) -> dict[str, Any]:
         """
-        Retrieve a paginated list of pronunciation dictionaries from the v1 API endpoint.
-        
+        Retrieves a list of pronunciation dictionaries using the GET method at the "/v1/pronunciation-dictionaries" endpoint, allowing users to specify the number of items per page via the "page_size" query parameter.
+
         Args:
-            cursor: Optional; a string used for pagination, indicating the position to continue retrieving results from.
-            page_size: Optional; an integer specifying the maximum number of pronunciation dictionaries to return in one page.
-        
+            page_size (string): How many pronunciation dictionaries to return at maximum. Can not exceed 100, defaults to 30. Example: '1'.
+
         Returns:
-            A dictionary containing the response data from the pronunciation dictionaries API, typically including results and pagination information.
-        
-        Raises:
-            requests.HTTPError: Raised if the HTTP request to the API fails or returns an error response status code.
-        
+            dict[str, Any]: Success / Success
+
         Tags:
-            get, list, pronunciation-dictionaries, api, pagination
+            Pronunciation Dictionary
         """
-        url = f"{self.base_url}/v1/pronunciation-dictionaries/"
-        query_params = {k: v for k, v in [('cursor', cursor), ('page_size', page_size)] if v is not None}
+        url = f"{self.base_url}/v1/pronunciation-dictionaries"
+        query_params = {k: v for k, v in [('page_size', page_size)] if v is not None}
         response = self._get(url, params=query_params)
         response.raise_for_status()
         return response.json()
 
-    def get_a_profile_page_profile__handle__get(self, handle) -> dict[str, Any]:
+    def invite_user(self, email=None) -> dict[str, Any]:
         """
-        Retrieves a user's profile data as a dictionary using their unique handle.
-        
+        Invites a user to join a workspace by sending an invitation, allowing them to access the specified workspace upon acceptance.
+
         Args:
-            handle: str. The unique identifier for the user profile to retrieve.
-        
+            email (string): email
+                Example:
+                ```json
+                {
+                  "email": "email"
+                }
+                ```
+
         Returns:
-            dict[str, Any]: A dictionary containing the user's profile data returned by the API.
-        
-        Raises:
-            ValueError: If 'handle' is None.
-            requests.exceptions.HTTPError: If the HTTP request returned an unsuccessful status code.
-        
+            dict[str, Any]: Success / Success
+
         Tags:
-            get, profile, api, user-data
+            Workspace
         """
-        if handle is None:
-            raise ValueError("Missing required parameter 'handle'")
-        url = f"{self.base_url}/profile/{handle}"
+        request_body = {
+            'email': email,
+        }
+        request_body = {k: v for k, v in request_body.items() if v is not None}
+        url = f"{self.base_url}/v1/workspace/invites/add"
+        query_params = {}
+        response = self._post(url, data=request_body, params=query_params)
+        response.raise_for_status()
+        return response.json()
+
+    def delete_existing_invitation(self, email=None) -> dict[str, Any]:
+        """
+        Deletes a workspace invite and returns a success response upon completion.
+
+        Args:
+            email (string): email
+                Example:
+                ```json
+                {
+                  "email": "email"
+                }
+                ```
+
+        Returns:
+            dict[str, Any]: Success / Success
+
+        Tags:
+            Workspace
+        """
+        request_body = {
+            'email': email,
+        }
+        request_body = {k: v for k, v in request_body.items() if v is not None}
+        url = f"{self.base_url}/v1/workspace/invites"
+        query_params = {}
+        response = self._delete(url, params=query_params)
+        response.raise_for_status()
+        return response.json()
+
+    def update_member(self, email=None) -> dict[str, Any]:
+        """
+        Adds members to a workspace and returns the updated member list upon success.
+
+        Args:
+            email (string): email
+                Example:
+                ```json
+                {
+                  "email": "email"
+                }
+                ```
+
+        Returns:
+            dict[str, Any]: Success / Success
+
+        Tags:
+            Workspace
+        """
+        request_body = {
+            'email': email,
+        }
+        request_body = {k: v for k, v in request_body.items() if v is not None}
+        url = f"{self.base_url}/v1/workspace/members"
+        query_params = {}
+        response = self._post(url, data=request_body, params=query_params)
+        response.raise_for_status()
+        return response.json()
+
+    def get_signed_url(self, agent_id=None) -> dict[str, Any]:
+        """
+        Generates a signed URL for initiating a conversation with a specific conversational AI agent, identified by the provided `agent_id`, using the ElevenLabs API.
+
+        Args:
+            agent_id (string): The id of the agent you're taking the action on. Example: '21m00Tcm4TlvDq8ikWAM'.
+
+        Returns:
+            dict[str, Any]: Success / Success
+
+        Tags:
+            Conversational Ai
+        """
+        url = f"{self.base_url}/v1/convai/conversation/get_signed_url"
+        query_params = {k: v for k, v in [('agent_id', agent_id)] if v is not None}
+        response = self._get(url, params=query_params)
+        response.raise_for_status()
+        return response.json()
+
+    def create_agent(self, conversation_config=None) -> dict[str, Any]:
+        """
+        Creates a conversational AI agent with specified configuration settings and returns the agent details.
+
+        Args:
+            conversation_config (object): conversation_config
+                Example:
+                ```json
+                {
+                  "conversation_config": {}
+                }
+                ```
+
+        Returns:
+            dict[str, Any]: Success / Success
+
+        Tags:
+            Conversational Ai
+        """
+        request_body = {
+            'conversation_config': conversation_config,
+        }
+        request_body = {k: v for k, v in request_body.items() if v is not None}
+        url = f"{self.base_url}/v1/convai/agents/create"
+        query_params = {}
+        response = self._post(url, data=request_body, params=query_params)
+        response.raise_for_status()
+        return response.json()
+
+    def get_agent(self, agent_id) -> dict[str, Any]:
+        """
+        Retrieves information about a specific conversational AI agent by its unique identifier using the GET method at the "/v1/convai/agents/{agent_id}" API endpoint.
+
+        Args:
+            agent_id (string): agent_id
+
+        Returns:
+            dict[str, Any]: Success / Success
+
+        Tags:
+            Conversational Ai
+        """
+        if agent_id is None:
+            raise ValueError("Missing required parameter 'agent_id'")
+        url = f"{self.base_url}/v1/convai/agents/{agent_id}"
         query_params = {}
         response = self._get(url, params=query_params)
         response.raise_for_status()
         return response.json()
 
-    def redirect_to_mintlify_docs_get(self, ) -> Any:
+    def delete_agent(self, agent_id) -> dict[str, Any]:
         """
-        Fetches the Mintlify documentation by sending a GET request and returns the parsed JSON response.
-        
+        Deletes a specified Conversational AI agent using the DELETE method.
+
+        Args:
+            agent_id (string): agent_id
+
         Returns:
-            dict: Parsed JSON content from the Mintlify documentation endpoint.
-        
-        Raises:
-            requests.HTTPError: If the HTTP request to the Mintlify documentation endpoint fails (i.e., a non-success status code is returned).
-        
+            dict[str, Any]: Success / Success
+
         Tags:
-            get, docs, mintlify, api
+            Conversational Ai
         """
-        url = f"{self.base_url}/docs"
+        if agent_id is None:
+            raise ValueError("Missing required parameter 'agent_id'")
+        url = f"{self.base_url}/v1/convai/agents/{agent_id}"
+        query_params = {}
+        response = self._delete(url, params=query_params)
+        response.raise_for_status()
+        return response.json()
+
+    def get_agent_widget_config(self, agent_id) -> dict[str, Any]:
+        """
+        Retrieves and configures the Convai widget for the specified agent, but the provided details do not specify the exact functionality of this specific endpoint, suggesting it may relate to integrating or customizing Convai's character interaction capabilities.
+
+        Args:
+            agent_id (string): agent_id
+
+        Returns:
+            dict[str, Any]: Success / Success
+
+        Tags:
+            Conversational Ai
+        """
+        if agent_id is None:
+            raise ValueError("Missing required parameter 'agent_id'")
+        url = f"{self.base_url}/v1/convai/agents/{agent_id}/widget"
+        query_params = {}
+        response = self._get(url, params=query_params)
+        response.raise_for_status()
+        return response.json()
+
+    def get_shareable_agent_link(self, agent_id) -> dict[str, Any]:
+        """
+        Retrieves and establishes a link for a Convai agent using the specified agent ID, facilitating integration or connectivity operations.
+
+        Args:
+            agent_id (string): agent_id
+
+        Returns:
+            dict[str, Any]: Success / Success
+
+        Tags:
+            Conversational Ai
+        """
+        if agent_id is None:
+            raise ValueError("Missing required parameter 'agent_id'")
+        url = f"{self.base_url}/v1/convai/agents/{agent_id}/link"
+        query_params = {}
+        response = self._get(url, params=query_params)
+        response.raise_for_status()
+        return response.json()
+
+
+
+    def get_documentation_from_agent_sknowledge_base(self, agent_id, documentation_id) -> dict[str, Any]:
+        """
+        Retrieves specific documentation for a knowledge base associated with an agent in Convai.
+
+        Args:
+            agent_id (string): agent_id
+            documentation_id (string): documentation_id
+
+        Returns:
+            dict[str, Any]: Success / Success
+
+        Tags:
+            Conversational Ai
+        """
+        if agent_id is None:
+            raise ValueError("Missing required parameter 'agent_id'")
+        if documentation_id is None:
+            raise ValueError("Missing required parameter 'documentation_id'")
+        url = f"{self.base_url}/v1/convai/agents/{agent_id}/knowledge-base/{documentation_id}"
+        query_params = {}
+        response = self._get(url, params=query_params)
+        response.raise_for_status()
+        return response.json()
+
+    def add_asecret_to_the_agent_which_can_be_referenced_in_tool_calls(self, agent_id, name=None, secret_value=None) -> dict[str, Any]:
+        """
+        Adds a secret to a specified conversational AI agent through the API and returns a status confirmation.
+
+        Args:
+            agent_id (string): agent_id
+            name (string): name Example: 'name'.
+            secret_value (string): secret_value
+                Example:
+                ```json
+                {
+                  "name": "name",
+                  "secret_value": "secret_value"
+                }
+                ```
+
+        Returns:
+            dict[str, Any]: Success / Success
+
+        Tags:
+            Conversational Ai
+        """
+        if agent_id is None:
+            raise ValueError("Missing required parameter 'agent_id'")
+        request_body = {
+            'name': name,
+            'secret_value': secret_value,
+        }
+        request_body = {k: v for k, v in request_body.items() if v is not None}
+        url = f"{self.base_url}/v1/convai/agents/{agent_id}/add-secret"
+        query_params = {}
+        response = self._post(url, data=request_body, params=query_params)
+        response.raise_for_status()
+        return response.json()
+
+    def get_agents_page(self) -> dict[str, Any]:
+        """
+        Retrieves a list of conversational AI agents available in the Convai system.
+
+        Returns:
+            dict[str, Any]: Success / Success
+
+        Tags:
+            Conversational Ai
+        """
+        url = f"{self.base_url}/v1/convai/agents"
+        query_params = {}
+        response = self._get(url, params=query_params)
+        response.raise_for_status()
+        return response.json()
+
+    def get_conversations(self, agent_id=None) -> dict[str, Any]:
+        """
+        Retrieves conversation history for a specified agent ID.
+
+        Args:
+            agent_id (string): The id of the agent you're taking the action on. Example: '21m00Tcm4TlvDq8ikWAM'.
+
+        Returns:
+            dict[str, Any]: Success / Success
+
+        Tags:
+            Conversational Ai
+        """
+        url = f"{self.base_url}/v1/convai/conversations"
+        query_params = {k: v for k, v in [('agent_id', agent_id)] if v is not None}
+        response = self._get(url, params=query_params)
+        response.raise_for_status()
+        return response.json()
+
+    def get_conversation_details(self, conversation_id) -> dict[str, Any]:
+        """
+        Retrieves and formats the details of a specific conversation based on the provided conversation ID.
+
+        Args:
+            conversation_id (string): conversation_id
+
+        Returns:
+            dict[str, Any]: Success / Success
+
+        Tags:
+            Conversational Ai
+        """
+        if conversation_id is None:
+            raise ValueError("Missing required parameter 'conversation_id'")
+        url = f"{self.base_url}/v1/convai/conversations/{conversation_id}"
+        query_params = {}
+        response = self._get(url, params=query_params)
+        response.raise_for_status()
+        return response.json()
+
+    def get_conversation_audio(self, conversation_id) -> Any:
+        """
+        Retrieves the audio from a specific conversation using the ElevenLabs Conversational AI API.
+
+        Args:
+            conversation_id (string): conversation_id
+
+        Returns:
+            Any: Success / Success
+
+        Tags:
+            Conversational Ai
+        """
+        if conversation_id is None:
+            raise ValueError("Missing required parameter 'conversation_id'")
+        url = f"{self.base_url}/v1/convai/conversations/{conversation_id}/audio"
         query_params = {}
         response = self._get(url, params=query_params)
         response.raise_for_status()
@@ -1351,52 +1820,75 @@ class ElevenlabsApp(APIApplication):
 
     def list_tools(self):
         return [
-            self.get_generated_items_v1_history_get,
-            self.get_history_item_by_id_v1_history__history_item_id__get,
-            self.delete_history_item_v1_history__history_item_id__delete,
-            self.get_audio_from_history_item_v1_history__history_item_id__audio_get,
-            self.download_history_items_v1_history_download_post,
-            self.delete_sample_v1_voices__voice_id__samples__sample_id__delete,
-            self.get_audio_from_sample_v1_voices__voice_id__samples__sample_id__audio_get,
-            self.text_to_speech_v1_text_to_speech__voice_id__post,
-            self.text_to_speech_v1_text_to_speech__voice_id__stream_post,
-            self.voice_generation_parameters_v1_voice_generation_generate_voice_parameters_get,
-            self.generate_a_random_voice_v1_voice_generation_generate_voice_post,
-            self.create_a_previously_generated_voice_v1_voice_generation_create_voice_post,
-            self.get_user_subscription_info_v1_user_subscription_get,
-            self.get_user_info_v1_user_get,
-            self.get_voices_v1_voices_get,
-            self.get_default_voice_settings__v1_voices_settings_default_get,
-            self.get_voice_settings_v1_voices__voice_id__settings_get,
-            self.get_voice_v1_voices__voice_id__get,
-            self.delete_voice_v1_voices__voice_id__delete,
-            self.add_sharing_voice_v1_voices_add__public_user_id___voice_id__post,
-            self.get_projects_v1_projects_get,
-            self.get_project_by_id_v1_projects__project_id__get,
-            self.delete_project_v1_projects__project_id__delete,
-            self.convert_project_v1_projects__project_id__convert_post,
-            self.get_project_snapshots_v1_projects__project_id__snapshots_get,
-            self.stream_project_audio_v1_projects__project_id__snapshots__project_snapshot_id__stream_post,
-            self.streams_archive_with_project_audio_v1_projects__project_id__snapshots__project_snapshot_id__archive_post,
-            self.get_chapters_v1_projects__project_id__chapters_get,
-            self.get_chapter_by_id_v1_projects__project_id__chapters__chapter_id__get,
-            self.delete_chapter_v1_projects__project_id__chapters__chapter_id__delete,
-            self.convert_chapter_v1_projects__project_id__chapters__chapter_id__convert_post,
-            self.get_chapter_snapshots_v1_projects__project_id__chapters__chapter_id__snapshots_get,
-            self.stream_chapter_audio_v1_projects__project_id__chapters__chapter_id__snapshots__chapter_snapshot_id__stream_post,
-            self.update_pronunciation_dictionaries_v1_projects__project_id__update_pronunciation_dictionaries_post,
-            self.get_dubbing_project_metadata_v1_dubbing__dubbing_id__get,
-            self.delete_dubbing_project_v1_dubbing__dubbing_id__delete,
-            self.get_dubbed_file_v1_dubbing__dubbing_id__audio__language_code__get,
-            self.get_transcript_for_dub_v1_dubbing__dubbing_id__transcript__language_code__get,
-            self.get_sso_provider_admin_admin__admin_url_prefix__sso_provider_get,
-            self.get_models_v1_models_get,
-            self.get_voices_v1_shared_voices_get,
-            self.add_rules_to_the_pronunciation_dictionary_v1_pronunciation_dictionaries__pronunciation_dictionary_id__add_rules_post,
-            self.remove_rules_from_the_pronunciation_dictionary_v1_pronunciation_dictionaries__pronunciation_dictionary_id__remove_rules_post,
-            self.get_pls_file_with_a_pronunciation_dictionary_version_rules_v1_pronunciation_dictionaries__dictionary_id___version_id__download_get,
-            self.get_metadata_for_a_pronunciation_dictionary_v1_pronunciation_dictionaries__pronunciation_dictionary_id___get,
-            self.get_pronunciation_dictionaries_v1_pronunciation_dictionaries__get,
-            self.get_a_profile_page_profile__handle__get,
-            self.redirect_to_mintlify_docs_get
+            self.get_generated_items,
+            self.get_history_item_by_id,
+            self.delete_history_item,
+            self.get_audio_from_history_item,
+            self.download_history_items,
+            self.delete_sample,
+            self.get_audio_from_sample,
+            self.convert,
+            self.text_to_speech_with_timestamps,
+            self.convert_as_stream,
+            self.text_to_speech_streaming_with_timestamps,
+            self.voice_generation_parameters,
+            self.generate_arandom_voice,
+            self.create_apreviously_generated_voice,
+            self.generate_avoice_preview_from_description,
+            self.create_anew_voice_from_voice_preview,
+            self.get_user_subscription_info,
+            self.get_user_info,
+            self.get_voices,
+            self.get_default_voice_settings,
+            self.get_voice_settings,
+            self.get_voice,
+            self.delete_voice,
+            self.add_voice,
+            self.edit_voice,
+            self.add_sharing_voice,
+            self.get_shared_voices,
+            self.get_aprofile_page,
+            self.get_projects,
+            self.add_project,
+            self.get_project_by_id,
+            self.edit_basic_project_info,
+            self.delete_project,
+            self.convert_project,
+            self.get_project_snapshots,
+            self.streams_archive_with_project_audio,
+            self.add_chapter_to_aproject,
+            self.update_pronunciation_dictionaries,
+            self.get_chapters,
+            self.get_chapter_by_id,
+            self.delete_chapter,
+            self.convert_chapter,
+            self.get_chapter_snapshots,
+            self.dub_avideo_or_an_audio_file,
+            self.get_dubbing_project_metadata,
+            self.delete_dubbing_project,
+            self.get_transcript_for_dub,
+            self.get_models,
+            self.creates_audionative_enabled_project,
+            self.get_characters_usage_metrics,
+            self.add_apronunciation_dictionary,
+            self.add_rules_to_the_pronunciation_dictionary,
+            self.remove_rules_from_the_pronunciation_dictionary,
+            self.get_pls_file_with_apronunciation_dictionary_version_rules,
+            self.get_metadata_for_apronunciation_dictionary,
+            self.get_pronunciation_dictionaries,
+            self.invite_user,
+            self.delete_existing_invitation,
+            self.update_member,
+            self.get_signed_url,
+            self.create_agent,
+            self.get_agent,
+            self.delete_agent,
+            self.get_agent_widget_config,
+            self.get_shareable_agent_link,
+            self.get_documentation_from_agent_sknowledge_base,
+            self.add_asecret_to_the_agent_which_can_be_referenced_in_tool_calls,
+            self.get_agents_page,
+            self.get_conversations,
+            self.get_conversation_details,
+            self.get_conversation_audio
         ]
