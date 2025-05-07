@@ -19,7 +19,7 @@ class ElevenlabsApp(APIApplication):
             dict[str, Any]: Success / Success
 
         Tags:
-            History
+            History, important
         """
         url = f"{self.base_url}/v1/history"
         query_params = {k: v for k, v in [('page_size', page_size), ('voice_id', voice_id)] if v is not None}
@@ -499,7 +499,7 @@ class ElevenlabsApp(APIApplication):
             dict[str, Any]: Success / Success
 
         Tags:
-            User
+            User, important
         """
         url = f"{self.base_url}/v1/user"
         query_params = {}
@@ -515,7 +515,7 @@ class ElevenlabsApp(APIApplication):
             dict[str, Any]: Success / Success
 
         Tags:
-            voices
+            voices, important
         """
         url = f"{self.base_url}/v1/voices"
         query_params = {}
