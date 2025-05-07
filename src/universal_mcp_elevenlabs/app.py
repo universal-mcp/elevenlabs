@@ -4,7 +4,7 @@ from universal_mcp.integrations import Integration
 
 class ElevenlabsApp(APIApplication):
     def __init__(self, integration: Integration = None, **kwargs) -> None:
-        super().__init__(name='elevenlabsapp', integration=integration, **kwargs)
+        super().__init__(name='elevenlabs', integration=integration, **kwargs)
         self.base_url = "https://api.elevenlabs.io"
 
     def get_generated_items(self, page_size=None, voice_id=None) -> dict[str, Any]:
