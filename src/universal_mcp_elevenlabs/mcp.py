@@ -1,12 +1,12 @@
 
 from universal_mcp.servers import SingleMCPServer
-from universal_mcp.integrations import AgentRIntegration
+from universal_mcp.integrations import ApiKeyIntegration
 from universal_mcp.stores import EnvironmentStore
 
 from universal_mcp_elevenlabs.app import ElevenlabsApp
 
 env_store = EnvironmentStore()
-integration_instance = AgentRIntegration(name="elevenlabs", store=env_store)
+integration_instance = ApiKeyIntegration(name="ELEVENLABS_API_KEY", store=env_store)
 app_instance = ElevenlabsApp(integration=integration_instance)
 
 mcp = SingleMCPServer(

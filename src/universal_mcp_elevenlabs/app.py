@@ -1,12 +1,60 @@
 from typing import Any
 from universal_mcp.applications import APIApplication
 from universal_mcp.integrations import Integration
+# Add these imports at the top of your app.py
+from loguru import logger
+from universal_mcp.exceptions import NotAuthorizedError
 
 class ElevenlabsApp(APIApplication):
     def __init__(self, integration: Integration = None, **kwargs) -> None:
         super().__init__(name='elevenlabs', integration=integration, **kwargs)
         self.base_url = "https://api.elevenlabs.io"
 
+# This method should be added inside the ElevenlabsApp class in your app.py
+
+    def _get_headers(self) -> dict[str, str]:
+        """
+        Overrides the base _get_headers to provide ElevenLabs-specific authentication.
+        """
+        if not self.integration:
+            logger.warning(f"No integration configured for {self.name}. API calls will likely fail as API key cannot be retrieved.")
+            # Returning empty headers will cause the API call to fail with 401, which is appropriate.
+            return {}
+
+        try:
+            # self.integration is expected to be an ApiKeyIntegration instance.
+            # ApiKeyIntegration.get_credentials() calls its 'api_key' property,
+            # which retrieves the key from the store (e.g., EnvironmentStore via os.getenv)
+            # or raises NotAuthorizedError if the key is missing from the store.
+            credentials = self.integration.get_credentials()
+        except NotAuthorizedError:
+            # Log and re-raise. The actual HTTP request in the base class will then fail,
+            # and the original HTTPError (e.g., 401) from ElevenLabs can be handled by the caller.
+            logger.error(f"Authorization failed for {self.name}: API key not found or invalid. Ensure ELEVENLABS_API_KEY environment variable is set correctly.")
+            raise
+        except Exception as e:
+            # Catch other potential errors from the integration's get_credentials()
+            logger.error(f"Unexpected error fetching credentials for {self.name}: {e}")
+            # Treat as an authorization failure for safety.
+            raise NotAuthorizedError(f"Unexpected error during credential retrieval for {self.name}: {str(e)}") from e
+
+        # ApiKeyIntegration.get_credentials() returns a dict like {'api_key': 'the_actual_key'}
+        api_key_value = credentials.get("api_key")
+
+        if not api_key_value:
+            # This state should ideally be prevented by ApiKeyIntegration.api_key raising NotAuthorizedError.
+            # However, as a defensive measure:
+            logger.error(f"API key was not found in credentials for {self.name} after successful get_credentials call. This is unexpected.")
+            raise NotAuthorizedError(f"API key for {self.name} is missing from successfully retrieved credentials. Check integration configuration.")
+
+        logger.debug(f"Using 'xi-api-key' header for {self.name} authentication.")
+        # ElevenLabs expects the API key in the 'xi-api-key' header.
+        # 'Accept: application/json' is good practice for APIs that return JSON.
+        return {
+            "xi-api-key": api_key_value,
+            "Accept": "application/json"
+        }
+        
     def get_generated_items(self, page_size=None, voice_id=None) -> dict[str, Any]:
         """
         Retrieves historical data based on specified parameters, including page size and voice ID, using the "GET" method at the "/v1/history" endpoint.
