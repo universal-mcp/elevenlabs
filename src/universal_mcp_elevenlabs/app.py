@@ -23,7 +23,7 @@ class ElevenlabsApp(APIApplication):
             JSONDecodeError: Raised if the response body cannot be parsed as JSON.
 
         Tags:
-            History
+            History, important
         """
         url = f"{self.base_url}/v1/history"
         query_params = {k: v for k, v in [('page_size', page_size), ('voice_id', voice_id)] if v is not None}
@@ -51,7 +51,7 @@ class ElevenlabsApp(APIApplication):
             JSONDecodeError: Raised if the response body cannot be parsed as JSON.
 
         Tags:
-            History
+            History, important
         """
         if history_item_id is None:
             raise ValueError("Missing required parameter 'history_item_id'.")
@@ -81,7 +81,7 @@ class ElevenlabsApp(APIApplication):
             JSONDecodeError: Raised if the response body cannot be parsed as JSON.
 
         Tags:
-            History
+            History, important
         """
         if history_item_id is None:
             raise ValueError("Missing required parameter 'history_item_id'.")
@@ -824,7 +824,7 @@ class ElevenlabsApp(APIApplication):
             JSONDecodeError: Raised if the response body cannot be parsed as JSON.
 
         Tags:
-            voices
+            voices, important
         """
         if voice_id is None:
             raise ValueError("Missing required parameter 'voice_id'.")
@@ -985,7 +985,7 @@ class ElevenlabsApp(APIApplication):
             JSONDecodeError: Raised if the response body cannot be parsed as JSON.
 
         Tags:
-            Projects
+            Projects, important
         """
         url = f"{self.base_url}/v1/projects"
         query_params = {}
@@ -1016,7 +1016,7 @@ class ElevenlabsApp(APIApplication):
             JSONDecodeError: Raised if the response body cannot be parsed as JSON.
 
         Tags:
-            Projects
+            Projects, important
         """
         request_body_data = None
         request_body_data = {
@@ -1122,7 +1122,7 @@ class ElevenlabsApp(APIApplication):
             JSONDecodeError: Raised if the response body cannot be parsed as JSON.
 
         Tags:
-            Projects
+            Projects, important
         """
         if project_id is None:
             raise ValueError("Missing required parameter 'project_id'.")
